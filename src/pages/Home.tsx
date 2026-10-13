@@ -6,7 +6,10 @@ import { Hours } from '@/sections/Hours'
 import { HowItWorks } from '@/sections/HowItWorks'
 import { Location } from '@/sections/Location'
 import { Reviews } from '@/sections/Reviews'
+import { CartBar } from '@/components/CartBar'
+import { CartDrawer } from '@/components/CartDrawer'
 import { Header } from '@/components/Header'
+import { Menu } from '@/sections/Menu'
 
 export default function Home() {
   return (
@@ -21,6 +24,7 @@ export default function Home() {
       <main id="conteudo">
         <Hero />
         <Highlights />
+        <Menu />
         <HowItWorks />
         <Hours />
         <Reviews />
@@ -28,6 +32,8 @@ export default function Home() {
         <Location />
       </main>
       <Footer />
+      <CartBar />
+      <CartDrawer />
     </>
   )
 }
