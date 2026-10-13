@@ -47,7 +47,7 @@ export function Hero() {
           </div>
         </motion.div>
 
-        <div className="order-1 mx-auto aspect-square w-full max-w-[17rem] sm:max-w-[26rem] lg:max-w-[34rem] lg:order-2">
+        <div className="order-1 mx-auto aspect-square w-full max-w-[17rem] sm:max-w-[26rem] lg:order-2 lg:max-w-[34rem]">
           <HeroScene />
         </div>
       </div>
