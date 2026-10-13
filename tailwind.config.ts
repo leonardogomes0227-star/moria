@@ -14,7 +14,8 @@ export default {
         line: 'rgba(255,255,255,0.08)',
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['Anton', 'Impact', 'sans-serif'],
+        script: ['"Permanent Marker"', 'cursive'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: { card: '1.25rem', pill: '999px' },
@@ -54,6 +55,14 @@ export default {
           '0%,100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-8px)' },
         },
+        kenburns: {
+          '0%': { transform: 'scale(1) translate3d(0,0,0)' },
+          '100%': { transform: 'scale(1.07) translate3d(-1.5%,-1%,0)' },
+        },
+        sweep: {
+          '0%': { transform: 'translateX(-120%) skewX(-18deg)' },
+          '100%': { transform: 'translateX(320%) skewX(-18deg)' },
+        },
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
@@ -68,6 +77,8 @@ export default {
         'pulse-glow': 'pulseGlow 2.8s ease-in-out infinite',
         'spin-slow': 'spin 22s linear infinite',
         marquee: 'marquee 28s linear infinite',
+        kenburns: 'kenburns 16s ease-in-out infinite alternate',
+        sweep: 'sweep 5s ease-in-out infinite',
         shimmer: 'shimmer 4s linear infinite',
         'fade-up': 'fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) both',
         drift: 'drift 14s ease-in-out infinite',

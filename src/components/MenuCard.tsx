@@ -1,9 +1,9 @@
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { useState, type MouseEvent, type PointerEvent } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
+import { addToCart } from '@/lib/cartActions'
 import { formatPrice } from '@/lib/format'
 import type { MenuItem } from '@/lib/types'
-import { addToCart } from '@/lib/cartActions'
 import { CheckIcon, PlusIcon } from './Icons'
 import { MenuImage } from './MenuImage'
 
@@ -66,48 +66,65 @@ export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
       style={{ rotateX, rotateY, transformPerspective: 900 }}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      className={`card group flex flex-col overflow-hidden transition-shadow hover:shadow-glow ${
-        item.disponivel ? '' : 'opacity-55 grayscale'
+      className={`group relative flex flex-col overflow-hidden rounded-[1.6rem] border border-line bg-surface shadow-card transition-all duration-300 hover:border-brand/70 hover:shadow-glow ${
+        item.disponivel ? '' : 'opacity-60 grayscale'
       } ${className}`}
     >
       <button
         type="button"
         onClick={() => onOpen(item)}
-        className="relative block text-left"
+        className="relative block overflow-hidden text-left"
       >
-        <MenuImage src={item.imagem} alt={item.nome} categoria={item.categoria} />
+        <MenuImage
+          src={item.imagem}
+          alt={item.nome}
+          categoria={item.categoria}
+          className="transition-transform duration-700 ease-out group-hover:scale-110"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"
+        />
         {item.destaque && item.disponivel && (
-          <span className="absolute left-3 top-3 rounded-pill bg-brand-gradient px-3 py-1 text-xs font-bold uppercase tracking-wide shadow-glow">
-            Mais pedido
+          <span className="absolute left-0 top-4 flex items-center gap-1.5 rounded-r-full bg-brand-gradient py-1 pl-3 pr-4 font-display text-sm uppercase tracking-wider shadow-glow">
+            <span aria-hidden="true">🔥</span> Mais pedido
           </span>
         )}
         {!item.disponivel && (
-          <span className="absolute left-3 top-3 rounded-pill bg-black/80 px-3 py-1 text-xs font-bold uppercase">
+          <span className="absolute left-0 top-4 rounded-r-full bg-black/85 py-1 pl-3 pr-4 font-display text-sm uppercase tracking-wider">
             Indisponível
           </span>
         )}
+        <span className="absolute bottom-3 right-3 -rotate-6 rounded-xl bg-white px-3 py-1 font-display text-2xl leading-none text-bg shadow-card transition-transform duration-300 group-hover:rotate-0 group-hover:scale-110">
+          {formatPrice(item.preco)}
+        </span>
       </button>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="text-xl leading-tight">{item.nome}</h3>
+      <div className="flex flex-1 flex-col gap-2 p-5 pt-3">
+        <h3 className="text-[1.7rem] leading-none">{item.nome}</h3>
         <p className="line-clamp-2 flex-1 text-sm text-muted">{item.descricao}</p>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="text-lg font-bold text-white">{formatPrice(item.preco)}</span>
-          {item.disponivel && (
-            <button
-              type="button"
-              onClick={handleAdd}
-              aria-label={`Adicionar ${item.nome} ao carrinho`}
-              className={`inline-flex items-center gap-1.5 rounded-pill px-4 py-2 text-sm font-semibold transition-colors ${
-                added
-                  ? 'bg-[#1FA855] text-white'
-                  : 'bg-brand text-white hover:bg-brand-light'
-              }`}
-            >
-              {added ? <CheckIcon size={18} /> : <PlusIcon size={18} />}
-              {added ? 'Adicionado' : 'Adicionar'}
-            </button>
-          )}
-        </div>
+        {item.disponivel && (
+          <button
+            type="button"
+            onClick={handleAdd}
+            aria-label={`Adicionar ${item.nome} ao carrinho`}
+            className={`relative mt-3 inline-flex items-center justify-center gap-2 overflow-hidden rounded-pill px-5 py-3 text-sm font-bold uppercase tracking-wide transition-colors ${
+              added
+                ? 'bg-[#1FA855] text-white'
+                : 'bg-brand text-white hover:bg-brand-light'
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 left-0 w-1/4 animate-sweep bg-white/25 opacity-0 group-hover:opacity-100"
+            />
+            {added ? <CheckIcon size={18} /> : <PlusIcon size={18} />}
+            {added
+              ? 'Adicionado!'
+              : item.adicionais.length > 0
+                ? 'Personalizar e pedir'
+                : 'Adicionar ao pedido'}
+          </button>
+        )}
       </div>
     </motion.li>
   )

@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react'
 import { SearchIcon } from '@/components/Icons'
 import { MenuCard } from '@/components/MenuCard'
 import { Section } from '@/components/Section'
-import { CATEGORIES, type Category, type MenuItem } from '@/lib/types'
+import { CATEGORIES, type MenuItem } from '@/lib/types'
+import { useMenuStore } from '@/store/menu'
 
 const normalize = (s: string) =>
   s
@@ -13,7 +14,7 @@ const normalize = (s: string) =>
 
 function Skeletons() {
   return (
-    <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i} className="card h-80 animate-pulse bg-surface-2" />
       ))}
@@ -30,7 +31,8 @@ interface MenuProps {
 }
 
 export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
-  const [category, setCategory] = useState<Category>(CATEGORIES[0])
+  const category = useMenuStore((s) => s.category)
+  const setCategory = useMenuStore((s) => s.setCategory)
   const [query, setQuery] = useState('')
 
   const searching = query.trim().length > 0
@@ -44,9 +46,9 @@ export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
   return (
     <Section
       id="cardapio"
-      eyebrow="Cardápio digital"
-      title="Escolha o seu"
-      subtitle="Toque em Adicionar e finalize pelo WhatsApp."
+      eyebrow="cardápio completo"
+      title="Monte o seu pedido"
+      subtitle="Toque em Adicionar e finalize em segundos pelo WhatsApp."
     >
       <div className="sticky top-16 z-30 -mx-4 mb-8 border-y border-line bg-bg/85 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-card sm:border">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -131,7 +133,7 @@ export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
                   : 'Nenhum item nesta categoria ainda.'}
               </p>
             ) : (
-              <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {visible.map((item) => (
                   <MenuCard key={item.id} item={item} onOpen={onOpen} />
                 ))}

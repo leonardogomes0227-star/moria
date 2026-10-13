@@ -33,7 +33,7 @@ export function Reviews() {
   return (
     <Section
       id="feedbacks"
-      eyebrow="Quem provou, aprovou"
+      eyebrow="quem provou, aprovou"
       title="O que dizem nossos clientes"
       className="bg-surface/40"
     >

@@ -77,7 +77,7 @@ export function AdminLayout({ email }: { email: string }) {
   const context: AdminContext = { orders, ordersError: error, reloadOrders: reload }
 
   return (
-    <div className="min-h-svh lg:flex">
+    <div className="admin-root min-h-svh lg:flex">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-surface/70 p-5 lg:flex">
         <div className="sticky top-5 flex h-[calc(100svh-2.5rem)] flex-col">
           <Logo size={48} />

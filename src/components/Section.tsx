@@ -8,6 +8,8 @@ interface SectionProps {
   subtitle?: string
   children: ReactNode
   className?: string
+  /** `red`: fundo vermelho de marca (seções de destaque). */
+  tone?: 'dark' | 'red'
 }
 
 export function Section({
@@ -17,24 +19,47 @@ export function Section({
   subtitle,
   children,
   className = '',
+  tone = 'dark',
 }: SectionProps) {
+  const red = tone === 'red'
   return (
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className={`relative py-section ${className}`}
+      className={`relative py-section ${red ? 'bg-brand text-white' : ''} ${className}`}
     >
-      <div className="container-x">
-        <Reveal className="mx-auto mb-10 max-w-2xl text-center">
+      {red && (
+        <div
+          aria-hidden="true"
+          className="grill absolute inset-0 bg-gradient-to-b from-brand-dark/50 via-transparent to-brand-dark/60"
+        />
+      )}
+      <div className="container-x relative">
+        <Reveal className="mx-auto mb-12 max-w-3xl text-center">
           {eyebrow && (
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-ember">
+            <p
+              className={`mb-2 -rotate-2 font-script text-xl sm:text-2xl ${red ? 'text-white' : 'text-ember'}`}
+            >
               {eyebrow}
             </p>
           )}
-          <h2 id={`${id}-title`} className="text-3xl sm:text-4xl md:text-5xl">
+          <h2
+            id={`${id}-title`}
+            className="text-5xl leading-[0.95] sm:text-6xl md:text-7xl"
+          >
             {title}
           </h2>
-          {subtitle && <p className="mt-3 text-base text-muted sm:text-lg">{subtitle}</p>}
+          <span
+            aria-hidden="true"
+            className={`mx-auto mt-4 block h-1.5 w-20 rounded-full ${red ? 'bg-white' : 'bg-brand-gradient'}`}
+          />
+          {subtitle && (
+            <p
+              className={`mt-4 text-base sm:text-lg ${red ? 'text-white/90' : 'text-muted'}`}
+            >
+              {subtitle}
+            </p>
+          )}
         </Reveal>
         {children}
       </div>

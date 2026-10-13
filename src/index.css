@@ -7,6 +7,7 @@
     scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
     color-scheme: dark;
+    overflow-x: clip;
   }
   body {
     @apply bg-bg font-sans text-white antialiased;
@@ -30,7 +31,13 @@
   h1,
   h2,
   h3 {
-    @apply font-display font-bold tracking-tight;
+    @apply font-display font-normal uppercase tracking-wide;
+  }
+  /* O painel usa tipografia mais sóbria, fácil de ler */
+  .admin-root h1,
+  .admin-root h2,
+  .admin-root h3 {
+    @apply font-sans font-extrabold normal-case tracking-tight;
   }
   :focus-visible {
     outline: 2px solid #ff6a1a;
@@ -64,6 +71,17 @@
 @layer utilities {
   .text-gradient {
     @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+  .grill {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.028) 0 2px,
+      transparent 2px 16px
+    );
+  }
+  .outline-text {
+    -webkit-text-stroke: 2px rgba(255, 255, 255, 0.35);
+    color: transparent;
   }
   .shimmer-text {
     background-image: linear-gradient(90deg, #ff5a3c, #ff8a3d, #ffc07a, #ff8a3d, #ff5a3c);

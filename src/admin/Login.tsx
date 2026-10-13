@@ -21,7 +21,7 @@ export function Login() {
   }
 
   return (
-    <main className="grid min-h-svh place-items-center px-4 py-10">
+    <main className="admin-root grid min-h-svh place-items-center px-4 py-10">
       <div className="w-full max-w-sm space-y-4">
         <form onSubmit={submit} className="card space-y-5 p-7">
           <Logo size={56} />

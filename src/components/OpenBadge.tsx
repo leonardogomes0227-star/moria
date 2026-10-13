@@ -1,7 +1,13 @@
 import { useOpenNow } from '@/hooks/useOpenNow'
 
-export function OpenBadge({ className = '' }: { className?: string }) {
-  const { open } = useOpenNow()
+export function OpenBadge({
+  className = '',
+  detailed = false,
+}: {
+  className?: string
+  detailed?: boolean
+}) {
+  const { open, label } = useOpenNow()
   return (
     <span
       role="status"
@@ -12,7 +18,7 @@ export function OpenBadge({ className = '' }: { className?: string }) {
       <span
         className={`h-2.5 w-2.5 rounded-full ${open ? 'animate-pulse bg-[#4ADE80]' : 'bg-[#FF6B6B]'}`}
       />
-      {open ? 'Aberto agora' : 'Fechado'}
+      {detailed ? label : open ? 'Aberto agora' : 'Fechado'}
     </span>
   )
 }

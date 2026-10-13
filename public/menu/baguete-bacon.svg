@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="58%" r="78%"><stop offset="0" stop-color="#7a2a12"/><stop offset=".5" stop-color="#1c0e0e"/><stop offset="1" stop-color="#0a0d12"/></radialGradient>
+  <radialGradient id="rim" cx="50%" cy="100%" r="60%"><stop offset="0" stop-color="#ff6a1a" stop-opacity=".28"/><stop offset="1" stop-color="#ff6a1a" stop-opacity="0"/></radialGradient>
+  <filter id="b4"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="b12"><feGaussianBlur stdDeviation="12"/></filter>
+  <filter id="b2"><feGaussianBlur stdDeviation="1.6"/></filter>
+  <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<rect width="800" height="600" fill="url(#rim)"/>
+<g fill="#ff7a22" filter="url(#b2)" opacity=".75">
+  <circle cx="120" cy="140" r="3"/><circle cx="690" cy="110" r="2.6"/><circle cx="610" cy="250" r="2"/><circle cx="170" cy="330" r="2.4"/><circle cx="730" cy="380" r="3"/><circle cx="90" cy="450" r="2"/><circle cx="560" cy="60" r="2"/><circle cx="260" cy="70" r="2.2"/>
+</g>
+<g fill="none" stroke="#fff" stroke-linecap="round" opacity=".16" filter="url(#b4)"><path d="M330 190c-30-40 30-60 0-100" stroke-width="14"/><path d="M410 170c-30-40 30-60 0-100" stroke-width="12"/><path d="M480 195c-26-34 26-52 0-90" stroke-width="12"/></g>
+<ellipse cx="400" cy="505" rx="270" ry="30" fill="#000" opacity=".55" filter="url(#b12)"/>
+<g transform="translate(400 320) scale(1.15) translate(-400 -330)"><g transform="translate(-10 40) rotate(-14 400 300)">
+  <defs>
+    <linearGradient id="crust" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3b45a"/><stop offset=".5" stop-color="#d98d34"/><stop offset="1" stop-color="#a9611b"/></linearGradient>
+    <linearGradient id="crustB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d18a35"/><stop offset="1" stop-color="#8e4f14"/></linearGradient>
+    <linearGradient id="pty" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b3419"/><stop offset="1" stop-color="#2a1208"/></linearGradient>
+    <linearGradient id="lt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd14f"/><stop offset="1" stop-color="#3f8f2a"/></linearGradient>
+  </defs>
+  <path d="M130 330c-18-4-20-26 0-34 60-24 480-24 540 0 20 8 18 30 0 34-60 22-480 22-540 0z" fill="url(#crustB)"/>
+  <path d="M150 318c80 12 420 12 500 0" stroke="#fff" stroke-opacity=".2" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <rect x="196" y="288" width="420" height="34" rx="16" fill="url(#pty)"/>
+       <path d="M190 280c30 12 50-12 80 0s50-12 80 0 50-12 80 0 50-12 80 0 40-8 58 2" stroke="#c43a2c" stroke-width="14" fill="none" stroke-linecap="round"/>
+       <path d="M200 304c34 16 56-10 90 4s56-12 90 2 56-12 90 2 50-10 74 2" stroke="#ffb400" stroke-width="14" fill="none" stroke-linecap="round"/>
+       <g fill="#ffb400"><path d="M250 318l14 0 -7 32z"/><path d="M360 318l14 0 -7 32z"/><path d="M470 318l14 0 -7 32z"/><path d="M560 318l14 0 -7 32z"/></g>
+  <path d="M126 292c-16-4-20-18-6-28 20-18 100-40 280-40s260 22 280 40c14 10 10 24-6 28-70-16-480-16-548 0z" fill="url(#lt)"/>
+  <path d="M130 284c-6-10-8-24 8-34 30-26 110-44 262-44s232 18 262 44c16 10 14 24 8 34-30-20-130-26-270-26s-240 6-270 26z" fill="url(#crust)"/>
+  <path d="M164 236c60-24 150-34 236-34 90 0 170 12 236 36" stroke="#fff" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round" filter="url(#b4)"/>
+  <g stroke="#a35d17" stroke-width="7" stroke-linecap="round" opacity=".75"><path d="M230 232l22 26M320 224l22 26M410 222l22 26M500 224l22 26M590 232l22 26"/></g>
+  <g stroke="#ffe3b0" stroke-width="3" stroke-linecap="round" opacity=".5"><path d="M236 230l18 22M326 222l18 22M416 220l18 22M506 222l18 22M596 230l18 22"/></g>
+  </g></g>
+</svg>

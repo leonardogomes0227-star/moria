@@ -24,8 +24,8 @@ export function Favorites({ items, onOpen }: FavoritesProps) {
   return (
     <Section
       id="mais-pedidos"
-      eyebrow="Os queridinhos"
-      title="Mais pedidos da casa"
+      eyebrow="os queridinhos da casa"
+      title="Mais pedidos"
       className="!pb-6"
     >
       <div className="relative">

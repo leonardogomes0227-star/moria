@@ -2,12 +2,12 @@ import { useState } from 'react'
 import type { Category } from '@/lib/types'
 
 const fallbackByCategory: Record<Category, string> = {
-  Hambúrgueres: '/placeholders/hamburguer.svg',
-  Baguetes: '/placeholders/baguete.svg',
-  Acompanhamentos: '/placeholders/acompanhamento.svg',
-  Molhos: '/placeholders/molho.svg',
-  Bebidas: '/placeholders/bebida.svg',
-  Combos: '/placeholders/combo.svg',
+  Hambúrgueres: '/menu/burger-1.webp',
+  Baguetes: '/menu/baguete-costela.svg',
+  Acompanhamentos: '/menu/batata.svg',
+  Molhos: '/menu/molho-artesanal.svg',
+  Bebidas: '/menu/refrigerante-lata.svg',
+  Combos: '/menu/combo-classico.svg',
 }
 
 interface MenuImageProps {

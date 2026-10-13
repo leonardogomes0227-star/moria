@@ -1,9 +1,13 @@
 import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion'
 import { useEffect, useState, type PointerEvent } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
+import { useMenu } from '@/hooks/useMenu'
 import { config } from '@/lib/config'
+import { formatPrice } from '@/lib/format'
+import { scrollToId } from '@/lib/scroll'
+import { useMenuStore } from '@/store/menu'
 import { FlameIcon } from './Icons'
-import { OpenBadge } from './OpenBadge'
+import { MenuImage } from './MenuImage'
 
 /** Pontos interativos sobre a foto (posições em % da imagem). Só descrevem o que a foto mostra. */
 const HOTSPOTS = [
@@ -60,7 +64,7 @@ function Seal() {
   return (
     <div
       aria-hidden="true"
-      className="absolute -right-1 top-0 grid h-24 w-24 place-items-center rounded-full border border-ember/40 bg-bg/80 shadow-glow backdrop-blur sm:h-28 sm:w-28"
+      className="absolute -right-1 top-0 grid h-24 w-24 place-items-center rounded-full border border-ember/40 bg-bg/80 shadow-glow backdrop-blur sm:h-32 sm:w-32"
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 animate-spin-slow">
         <defs>
@@ -70,12 +74,46 @@ function Seal() {
           <textPath href="#seal-path">{SEAL_TEXT}</textPath>
         </text>
       </svg>
-      <FlameIcon size={30} className="text-ember" />
+      <FlameIcon size={32} className="text-ember" />
     </div>
   )
 }
 
-/** Foto real do hambúrguer com parallax (mouse e scroll), brilho de brasa e selos. */
+/** Cartão flutuante com o item “mais pedido”: leva direto ao cardápio. */
+function FeaturedCard() {
+  useMenu()
+  const items = useMenuStore((s) => s.items)
+  const setCategory = useMenuStore((s) => s.setCategory)
+  const item =
+    items.find((i) => i.destaque && i.disponivel && i.categoria === 'Hambúrgueres') ??
+    items.find((i) => i.destaque && i.disponivel)
+  if (!item) return null
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setCategory(item.categoria)
+        scrollToId('cardapio')
+      }}
+      className="absolute -bottom-3 right-0 flex animate-float items-center gap-3 rounded-2xl border border-white/15 bg-bg/85 p-2.5 pr-4 text-left shadow-glow backdrop-blur-xl transition-colors hover:border-ember sm:right-4"
+    >
+      <span className="w-16 shrink-0 overflow-hidden rounded-xl">
+        <MenuImage src={item.imagem} alt="" categoria={item.categoria} />
+      </span>
+      <span>
+        <span className="block font-script text-sm text-ember">o mais pedido</span>
+        <span className="block font-display text-lg uppercase leading-tight">
+          {item.nome}
+        </span>
+        <span className="block text-sm font-semibold text-white/85">
+          {formatPrice(item.preco)} · <span className="text-ember">Pedir →</span>
+        </span>
+      </span>
+    </button>
+  )
+}
+
+/** Foto real do hambúrguer com parallax (mouse e scroll), Ken Burns, brilho de brasa e selos. */
 export function HeroPhoto() {
   const reduced = usePrefersReducedMotion()
   const { scrollY } = useScroll()
@@ -110,33 +148,31 @@ export function HeroPhoto() {
     <div
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      className="relative mx-auto w-full max-w-xl lg:max-w-none"
+      className="relative mx-auto w-full max-w-xl lg:max-w-none lg:scale-[1.12]"
       style={{ aspectRatio: `${width} / ${height}` }}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(closest-side,rgba(214,31,31,0.45),transparent)]"
+        className="absolute inset-0 bg-[radial-gradient(closest-side,rgba(214,31,31,0.55),transparent)]"
       />
       <motion.div style={{ x, y: scrollShift }} className="absolute inset-0">
         <motion.div style={{ y }} className="absolute inset-0">
           <img
             src={image}
             srcSet={`${imageSmall} ${smallWidth}w, ${image} ${width}w`}
-            sizes="(min-width: 1024px) 560px, 100vw"
+            sizes="(min-width: 1024px) 620px, 100vw"
             alt={alt}
             width={width}
             height={height}
             fetchPriority="high"
             decoding="async"
-            className="h-full w-full select-none object-cover"
+            className="h-full w-full animate-kenburns select-none object-cover"
           />
           <Hotspots />
         </motion.div>
       </motion.div>
       <Seal />
-      <div className="absolute bottom-[6%] left-[4%] sm:left-[8%]">
-        <OpenBadge className="border border-line bg-bg/85 backdrop-blur" />
-      </div>
+      <FeaturedCard />
     </div>
   )
 }

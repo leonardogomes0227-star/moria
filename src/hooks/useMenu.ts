@@ -1,29 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-import { fetchMenu, type MenuResult } from '@/lib/api'
+import { useEffect } from 'react'
+import { useMenuStore } from '@/store/menu'
 
+/** Dispara a busca do cardápio (uma vez) e devolve o estado compartilhado. */
 export function useMenu() {
-  const [result, setResult] = useState<MenuResult | null>(null)
-  const [attempt, setAttempt] = useState(0)
-
+  const { items, loading, degraded, load } = useMenuStore()
   useEffect(() => {
-    let cancelled = false
-    void fetchMenu().then((r) => {
-      if (!cancelled) setResult(r)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [attempt])
-
-  const reload = useCallback(() => {
-    setResult(null)
-    setAttempt((n) => n + 1)
-  }, [])
-
-  return {
-    items: result?.items ?? [],
-    loading: result === null,
-    degraded: result?.degraded ?? false,
-    reload,
-  }
+    void load()
+  }, [load])
+  return { items, loading, degraded, reload: () => void load(true) }
 }

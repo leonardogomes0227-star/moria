@@ -12,7 +12,11 @@ export function Hours() {
   const { today } = useOpenNow()
 
   return (
-    <Section id="funcionamento" eyebrow="Funcionamento" title="Horário de atendimento">
+    <Section
+      id="funcionamento"
+      eyebrow="estamos de portas abertas"
+      title="Horário de atendimento"
+    >
       <Reveal>
         <div className="card mx-auto max-w-xl p-6 sm:p-8">
           <div className="mb-6 flex items-center justify-between gap-3">

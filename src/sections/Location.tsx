@@ -8,8 +8,8 @@ export function Location() {
   return (
     <Section
       id="localizacao"
-      eyebrow="Venha nos visitar"
-      title="Localização"
+      eyebrow="venha nos visitar"
+      title="Onde estamos"
       className="bg-surface/40"
     >
       <div className="grid items-stretch gap-6 lg:grid-cols-5">

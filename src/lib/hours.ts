@@ -52,3 +52,40 @@ export const formatHours = (h: DayHours | null): string =>
   h
     ? `${h.open.replace(':00', 'h').replace(':', 'h')} às ${h.close.replace(':00', 'h').replace(':', 'h')}`
     : 'Fechado'
+
+const h = (t: string) => t.replace(':00', 'h').replace(':', 'h')
+const DAY_LONG = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
+
+export interface OpenStatus {
+  open: boolean
+  /** Ex.: "Aberto agora · até 23h" ou "Abre hoje às 18h". */
+  label: string
+}
+
+/** Situação da loja com o detalhe que ajuda o cliente a decidir (até que horas / quando abre). */
+export function openStatus(hours: WeekHours, date = new Date()): OpenStatus {
+  const { day, minutes } = nowInStoreTz(date)
+  if (isOpenNow(hours, date)) {
+    const today = hours[day]
+    const yesterday = hours[(day + 6) % 7]
+    const closing =
+      today &&
+      (isOvernight(today)
+        ? minutes >= toMinutes(today.open)
+        : minutes < toMinutes(today.close))
+        ? today.close
+        : yesterday?.close
+    return {
+      open: true,
+      label: closing ? `Aberto agora · até ${h(closing)}` : 'Aberto agora',
+    }
+  }
+  for (let offset = 0; offset < 7; offset++) {
+    const d = hours[(day + offset) % 7]
+    if (!d || (offset === 0 && toMinutes(d.open) <= minutes)) continue
+    const when =
+      offset === 0 ? 'hoje' : offset === 1 ? 'amanhã' : DAY_LONG[(day + offset) % 7]
+    return { open: false, label: `Fechado · abre ${when} às ${h(d.open)}` }
+  }
+  return { open: false, label: 'Fechado' }
+}

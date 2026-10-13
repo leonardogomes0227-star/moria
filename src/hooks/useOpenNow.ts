@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { isOpenNow, nowInStoreTz } from '@/lib/hours'
+import { nowInStoreTz, openStatus } from '@/lib/hours'
 import { useSettings } from '@/store/settings'
 
 /** "Aberto agora" calculado no fuso da loja, reavaliado a cada 30 s. */
@@ -10,5 +10,6 @@ export function useOpenNow() {
     const id = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(id)
   }, [])
-  return { open: isOpenNow(hours, now), today: nowInStoreTz(now).day }
+  const status = openStatus(hours, now)
+  return { open: status.open, label: status.label, today: nowInStoreTz(now).day }
 }

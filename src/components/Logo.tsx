@@ -55,9 +55,9 @@ export function Logo({ size = 44, showText = true, className = '' }: LogoProps) 
         </svg>
       )}
       {showText && (
-        <span className="font-display text-sm font-extrabold uppercase leading-[1.05] tracking-wider">
+        <span className="font-display text-xl uppercase leading-none tracking-wide">
           Moriá
-          <span className="block text-[0.62rem] font-semibold tracking-[0.22em] text-muted">
+          <span className="mt-0.5 block font-sans text-[0.6rem] font-semibold tracking-[0.24em] text-muted">
             Hamburgueria
           </span>
         </span>

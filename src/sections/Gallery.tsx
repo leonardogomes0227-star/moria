@@ -37,11 +37,11 @@ export function Gallery() {
   }, [active, close, step])
 
   return (
-    <Section id="galeria" eyebrow="Galeria" title="Direto da chapa">
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <Section id="galeria" eyebrow="de dar água na boca" title="Direto da chapa">
+      <ul className="grid auto-rows-[10.5rem] grid-cols-2 gap-3 sm:auto-rows-[13rem] md:grid-cols-4">
         {gallery.map((photo, i) => (
-          <li key={photo.id} className={i === 0 ? 'col-span-2 row-span-2' : ''}>
-            <Reveal delay={(i % 4) * 0.06}>
+          <li key={photo.id} className={i === 0 || i === 3 ? 'row-span-2' : ''}>
+            <Reveal delay={(i % 4) * 0.06} className="h-full">
               <button
                 type="button"
                 onClick={(e) => {
@@ -49,7 +49,7 @@ export function Gallery() {
                   setActive(i)
                 }}
                 aria-label={`Ampliar: ${photo.alt}`}
-                className="group block aspect-square w-full overflow-hidden rounded-card border border-line"
+                className="group relative block h-full w-full overflow-hidden rounded-[1.4rem] border border-line"
               >
                 <img
                   src={photo.src}
@@ -60,6 +60,12 @@ export function Gallery() {
                   decoding="async"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 flex items-end bg-gradient-to-t from-brand/70 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                >
+                  <span className="font-script text-lg">ver foto</span>
+                </span>
               </button>
             </Reveal>
           </li>
