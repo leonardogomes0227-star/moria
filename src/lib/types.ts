@@ -24,6 +24,8 @@ export interface MenuItem {
   destaque: boolean
   disponivel: boolean
   adicionais: Addon[]
+  /** Posição no cardápio (vem do Supabase). */
+  ordem?: number
 }
 
 /** Horário de um dia. `null` = fechado. Formato HH:mm; se close < open, fecha na madrugada seguinte. */
