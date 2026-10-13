@@ -89,6 +89,11 @@ function OrderCard({
         <div>
           <p className="text-lg font-bold">
             #{order.numero} · {order.cliente_nome}
+            {order.origem === 'whatsapp' && (
+              <span className="ml-2 rounded-full bg-[#15803D]/25 px-2 py-0.5 align-middle text-xs font-semibold text-[#86EFAC]">
+                WhatsApp
+              </span>
+            )}
           </p>
           <p className="text-sm text-muted">
             {time(order.criado_em)} · {order.tipo === 'entrega' ? 'Entrega' : 'Retirada'}

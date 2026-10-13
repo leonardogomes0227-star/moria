@@ -107,3 +107,10 @@ supabase/schema.sql
 - Lighthouse mobile (build de produção, emulação padrão, rede/CPU simuladas): Performance ≈ 86–87, Acessibilidade 100, Boas práticas 100, SEO 100, CLS 0.
 - Responsivo de 320 a 1920 px (sem rolagem horizontal), foco visível, navegação por teclado, `prefers-reduced-motion` respeitado.
 - O status "Aberto agora / Fechado" é calculado no fuso `America/Campo_Grande`, inclusive para expedientes que viram a madrugada.
+
+
+## Financeiro e Assistente de WhatsApp
+
+- **Custos** (`/admin/custos`): ingredientes, fichas técnicas, despesas, equipe, motoboy e resumo de lucro/ponto de equilíbrio.
+- **Assistente** (`/admin/assistente`): robô de WhatsApp com IA. Instalação em [`docs/ASSISTENTE-WHATSAPP.md`](docs/ASSISTENTE-WHATSAPP.md).
+- Testes: `npm test` (financeiro, assistente e webhook, sem rede).
