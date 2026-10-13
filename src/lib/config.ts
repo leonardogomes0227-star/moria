@@ -28,7 +28,7 @@ export const config = {
   timezone: 'America/Campo_Grande',
   currency: 'BRL',
 
-  whatsapp: '5567999999999', // EDITAR: formato 55 + DDD + número
+  whatsapp: '5567998022571', // número divulgado no Instagram da loja — confirme. Formato: 55 + DDD + número
   instagram: {
     handle: 'moria_hamburgueria',
     url: 'https://instagram.com/moria_hamburgueria',
@@ -46,6 +46,15 @@ export const config = {
   mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rio+Verde+de+Mato+Grosso+MS',
   /** URL do iframe (modo embed sem chave). EDITAR com o endereço real. */
   mapsEmbedUrl: 'https://www.google.com/maps?q=Rio+Verde+de+Mato+Grosso+MS&output=embed',
+
+  /** Imagem principal do hero. `mode: '3d'` usa a cena Three.js (e /models/burger.glb, se existir). */
+  hero: {
+    mode: 'photo' as 'photo' | '3d',
+    image: '/hero/burger.webp',
+    width: 940,
+    height: 652,
+    alt: 'Hambúrguer artesanal duplo com queijo cheddar derretido, segurado com as mãos',
+  },
 
   hours: defaultHours,
   deliveryFee: defaultDeliveryFee,

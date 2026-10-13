@@ -48,7 +48,7 @@ export function Gallery() {
                 <img
                   src={photo.src}
                   alt={photo.alt}
-                  width={600}
+                  width={800}
                   height={600}
                   loading="lazy"
                   decoding="async"
@@ -98,8 +98,8 @@ export function Gallery() {
               animate={{ scale: 1, opacity: 1 }}
               src={gallery[active].src}
               alt={gallery[active].alt}
-              width={900}
-              height={900}
+              width={800}
+              height={600}
               onClick={(e) => e.stopPropagation()}
               className="max-h-[85vh] w-auto max-w-full rounded-card object-contain"
             />

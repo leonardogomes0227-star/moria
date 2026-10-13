@@ -16,7 +16,7 @@ export function Footer() {
     <footer className="border-t border-line bg-surface/60 pb-24 pt-12 sm:pb-12">
       <div className="container-x grid gap-8 md:grid-cols-3">
         <div className="space-y-3">
-          <Logo />
+          <Logo size={72} />
           <p className="max-w-xs text-sm text-muted">{config.slogan}</p>
         </div>
         <div>

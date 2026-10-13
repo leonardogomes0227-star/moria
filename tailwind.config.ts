@@ -34,6 +34,10 @@ export default {
           '15%': { opacity: '0.9' },
           '100%': { transform: 'translateY(-110vh) scale(0.4)', opacity: '0' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
         pulseGlow: {
           '0%,100%': { boxShadow: '0 0 20px -4px rgba(214,31,31,0.4)' },
           '50%': { boxShadow: '0 0 36px 0 rgba(255,106,26,0.55)' },
@@ -42,6 +46,8 @@ export default {
       animation: {
         rise: 'rise 9s linear infinite',
         'pulse-glow': 'pulseGlow 2.8s ease-in-out infinite',
+        'spin-slow': 'spin 22s linear infinite',
+        marquee: 'marquee 28s linear infinite',
       },
     },
   },

@@ -35,7 +35,7 @@ create table if not exists public.store_settings (
 insert into public.store_settings (id, whatsapp, hours, delivery_fee, notice)
 values (
   1,
-  '5567999999999',
+  '5567998022571',
   '[{"open":"18:00","close":"23:00"},null,{"open":"18:00","close":"23:00"},{"open":"18:00","close":"23:00"},{"open":"18:00","close":"23:00"},{"open":"18:00","close":"00:00"},{"open":"18:00","close":"00:00"}]'::jsonb,
   '{"mode":"fixed","amount":5}'::jsonb,
   ''

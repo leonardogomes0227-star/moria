@@ -1,10 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
-import { ItemModal } from '@/components/ItemModal'
 import { SearchIcon } from '@/components/Icons'
 import { MenuCard } from '@/components/MenuCard'
 import { Section } from '@/components/Section'
-import { useMenu } from '@/hooks/useMenu'
 import { CATEGORIES, type Category, type MenuItem } from '@/lib/types'
 
 const normalize = (s: string) =>
@@ -23,11 +21,17 @@ function Skeletons() {
   )
 }
 
-export function Menu() {
-  const { items, loading, degraded, reload } = useMenu()
+interface MenuProps {
+  items: MenuItem[]
+  loading: boolean
+  degraded: boolean
+  reload: () => void
+  onOpen: (item: MenuItem) => void
+}
+
+export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
   const [category, setCategory] = useState<Category>(CATEGORIES[0])
   const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState<MenuItem | null>(null)
 
   const searching = query.trim().length > 0
   const visible = useMemo(() => {
@@ -124,15 +128,13 @@ export function Menu() {
             ) : (
               <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {visible.map((item) => (
-                  <MenuCard key={item.id} item={item} onOpen={setSelected} />
+                  <MenuCard key={item.id} item={item} onOpen={onOpen} />
                 ))}
               </ul>
             )}
           </motion.div>
         </AnimatePresence>
       )}
-
-      <ItemModal item={selected} onClose={() => setSelected(null)} />
     </Section>
   )
 }

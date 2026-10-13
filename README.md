@@ -31,20 +31,19 @@ Requer Node 20+. Sem nenhuma configuração extra o site funciona por inteiro us
 
 > O WhatsApp usa o formato `55` + DDD + número (ex.: `5567999999999`).
 
-### Trocar o logo
+### Logo
 
-Salve o arquivo como **`src/assets/logo.png`**. O componente `<Logo />` o detecta e passa a usá-lo no lugar do SVG placeholder. Para o favicon/ícones, substitua `public/favicon.svg`, `public/icon-192.png`, `public/icon-512.png` e `public/og.png` (1200×630).
+O logo real da Moriá está em `src/assets/logo.png` (o componente `<Logo />` o usa em todo o site; sem esse arquivo ele cai no SVG placeholder). Ícones e favicon: `public/favicon.png`, `public/icon-192.png`, `public/icon-512.png`; imagem de compartilhamento: `public/og.png` (1200×630).
 
-### Trocar as fotos
+### Fotos
 
-- **Itens do cardápio:** coloque as imagens em `public/menu/` e use `/menu/arquivo.jpg` em `imagem` (ou envie pelo painel `/admin`, que usa o Supabase Storage). Prefira proporção 4:3 (ex.: 1280×960) em WebP/AVIF/JPG otimizado.
-- **Galeria:** troque os itens de `src/data/gallery.ts`.
-- Os SVGs de `public/placeholders/` são gerados por `node scripts/gen-placeholders.mjs` e podem ser apagados quando houver fotos reais.
+- **Hero:** `public/hero/burger.webp` (caminho e dimensões em `config.hero`). A foto atual é um recorte da publicação do Instagram, de baixa resolução: troque pela original em alta (fundo escuro, fade nas bordas funciona melhor).
+- **Itens do cardápio:** coloque as imagens em `public/menu/` e aponte `imagem` em `src/data/menu.ts` (ou envie pelo painel `/admin`, que usa o Supabase Storage). Proporção 4:3 (ex.: 1280×960), WebP/AVIF/JPG. Hoje só hambúrgueres e combos têm foto de exemplo; baguetes, acompanhamentos, molhos e bebidas usam ilustrações de `public/placeholders/` até você enviar fotos reais.
+- **Galeria:** `public/gallery/` + `src/data/gallery.ts` (as 6 fotos atuais são recortes da mesma foto de exemplo).
 
-### Hambúrguer 3D
+### Hambúrguer 3D (opcional)
 
-O hero usa um hambúrguer procedural (primitivas do Three.js). Para usar um modelo seu, coloque **`public/models/burger.glb`**: ele é detectado automaticamente. Cada filho direto da cena do `.glb` vira uma "camada" (ordenada de baixo para cima) na animação de explosão por scroll.
-A cena 3D só carrega após a primeira interação (ou ~4 s), pausa fora da viewport, limita o DPR a 1.5 e cai para um SVG estático em dispositivos fracos, com economia de dados, sem WebGL ou com `prefers-reduced-motion`.
+O hero mostra a foto real por padrão. Para usar a cena Three.js, defina `hero.mode: '3d'` em `config.ts`: ela exibe um hambúrguer procedural ou, se existir **`public/models/burger.glb`**, o seu modelo (cada filho direto da cena do `.glb` vira uma camada na "explosão" por scroll). A cena só carrega após a primeira interação (ou ~4 s), pausa fora da viewport, limita o DPR a 1.5 e cai para um SVG em dispositivos fracos, com economia de dados, sem WebGL ou com `prefers-reduced-motion`.
 
 ## Supabase (cardápio editável + painel `/admin`) — opcional
 
@@ -87,6 +86,6 @@ supabase/schema.sql
 
 ## Qualidade
 
-- Lighthouse mobile (build de produção, emulação padrão): Performance ≈ 92, Acessibilidade 100, Boas práticas 100, SEO 100.
+- Lighthouse mobile (build de produção, emulação padrão): Performance ≈ 90, Acessibilidade 100, Boas práticas 100, SEO 100.
 - Responsivo de 320 a 1920 px (sem rolagem horizontal), foco visível, navegação por teclado, `prefers-reduced-motion` respeitado.
 - O status "Aberto agora / Fechado" é calculado no fuso `America/Campo_Grande`, inclusive para expedientes que viram a madrugada.

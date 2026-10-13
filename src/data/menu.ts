@@ -27,6 +27,17 @@ const baguetteAddons: Addon[] = [
   { nome: 'Molho artesanal extra', preco: 3 },
 ]
 
+/** Fotos de exemplo (recortes da foto do Instagram); troque por fotos reais de cada item. */
+const photos: Record<string, string> = {
+  h1: '/menu/burger-1.webp',
+  h2: '/menu/burger-2.webp',
+  h3: '/menu/burger-3.webp',
+  h4: '/menu/burger-4.webp',
+  h5: '/menu/burger-5.webp',
+  c1: '/menu/burger-1.webp',
+  c2: '/menu/burger-2.webp',
+}
+
 const make = (
   id: string,
   categoria: Category,
@@ -40,7 +51,7 @@ const make = (
   nome,
   descricao,
   preco,
-  imagem: img[categoria],
+  imagem: photos[id] ?? img[categoria],
   destaque: extra.destaque ?? false,
   disponivel: extra.disponivel ?? true,
   adicionais: extra.adicionais ?? [],

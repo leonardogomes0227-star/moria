@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Header } from '@/components/Header'
+import { Marquee } from '@/components/Marquee'
 import { Hero } from '@/sections/Hero'
 
 const Sections = lazy(() => import('./Sections'))
@@ -17,6 +18,7 @@ export default function Home() {
       <Header />
       <main id="conteudo">
         <Hero />
+        <Marquee />
         <Suspense fallback={<div className="min-h-[200vh]" aria-hidden="true" />}>
           <Sections />
         </Suspense>

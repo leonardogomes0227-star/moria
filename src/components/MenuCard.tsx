@@ -10,9 +10,10 @@ import { MenuImage } from './MenuImage'
 interface MenuCardProps {
   item: MenuItem
   onOpen: (item: MenuItem) => void
+  className?: string
 }
 
-export function MenuCard({ item, onOpen }: MenuCardProps) {
+export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
   const add = useCart((s) => s.add)
   const reduced = usePrefersReducedMotion()
   const [added, setAdded] = useState(false)
@@ -65,7 +66,7 @@ export function MenuCard({ item, onOpen }: MenuCardProps) {
       onPointerLeave={onLeave}
       className={`card group flex flex-col overflow-hidden transition-shadow hover:shadow-glow ${
         item.disponivel ? '' : 'opacity-55 grayscale'
-      }`}
+      } ${className}`}
     >
       <button
         type="button"

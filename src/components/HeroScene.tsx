@@ -2,7 +2,9 @@ import { useMotionValue, useMotionValueEvent, useScroll } from 'framer-motion'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useCanRender3D } from '@/hooks/useCanRender3D'
 import { useInView } from '@/hooks/useInView'
+import { config } from '@/lib/config'
 import { BurgerFallback } from './BurgerFallback'
+import { HeroPhoto } from './HeroPhoto'
 
 const Hero3D = lazy(() => import('./three/Hero3D'))
 
@@ -27,7 +29,7 @@ function useExplode() {
   return explode
 }
 
-export function HeroScene() {
+function Hero3DScene() {
   const can3D = useCanRender3D()
   const [ref, inView] = useInView<HTMLDivElement>()
   const explode = useExplode()
@@ -49,7 +51,10 @@ export function HeroScene() {
   }, [can3D])
 
   return (
-    <div ref={ref} className="relative h-full w-full">
+    <div
+      ref={ref}
+      className="relative mx-auto aspect-square w-full max-w-[17rem] sm:max-w-[26rem] lg:max-w-[34rem]"
+    >
       <div
         className={`absolute inset-0 transition-opacity duration-700 ${ready ? 'opacity-0' : 'opacity-100'}`}
       >
@@ -71,4 +76,9 @@ export function HeroScene() {
       )}
     </div>
   )
+}
+
+/** Foto real por padrão; `config.hero.mode = '3d'` ativa a cena Three.js. */
+export function HeroScene() {
+  return config.hero.mode === 'photo' ? <HeroPhoto /> : <Hero3DScene />
 }
