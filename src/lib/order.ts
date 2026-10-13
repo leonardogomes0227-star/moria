@@ -108,6 +108,7 @@ export function buildOrderRecord(
     troco: checkout.pagamento === 'Dinheiro' ? checkout.troco.trim() : '',
     obs: checkout.obs.trim(),
     itens: lines.map((l) => ({
+      item_id: l.itemId,
       nome: l.nome,
       qtd: l.qtd,
       preco: unitPrice(l),

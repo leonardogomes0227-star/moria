@@ -184,3 +184,32 @@ export const BellIcon = (p: IconProps) => (
     <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" />
   </Svg>
 )
+export const CoinIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M14.8 9.2c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.7.8-2.7 2 0 3 5.6 1.4 5.6 4.3 0 1.2-1.2 2.1-2.9 2.1-1.4 0-2.5-.6-3-1.6M12 6.5v1.3M12 16.2v1.3" />
+  </Svg>
+)
+export const BotIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 3.5V17H6.5A2.5 2.5 0 0 1 4 14.5z" />
+    <path d="M9 10.5h.01M15 10.5h.01M9.5 13.2c1.4 1 3.6 1 5 0" />
+  </Svg>
+)
+export const MoreIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="6" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="18" cy="12" r="1.2" fill="currentColor" />
+  </Svg>
+)
+export const DownloadIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" />
+  </Svg>
+)
+export const SendIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 12l16-8-6 16-2.5-6.5z" />
+  </Svg>
+)

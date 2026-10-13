@@ -4,6 +4,12 @@ import { AdminLayout } from '@/admin/AdminLayout'
 import { useAdminSession } from '@/admin/auth'
 import Content from '@/admin/Content'
 import Dashboard from '@/admin/Dashboard'
+import Expenses from '@/admin/finance/Expenses'
+import Ingredients from '@/admin/finance/Ingredients'
+import Recipes from '@/admin/finance/Recipes'
+import Summary from '@/admin/finance/Summary'
+import Team from '@/admin/finance/Team'
+import Assistant from '@/admin/Assistant'
 import Help from '@/admin/Help'
 import { Login } from '@/admin/Login'
 import MenuManager from '@/admin/MenuManager'
@@ -32,6 +38,12 @@ export default function Admin() {
         <Route index element={<Dashboard />} />
         <Route path="pedidos" element={<Orders />} />
         <Route path="cardapio" element={<MenuManager />} />
+        <Route path="custos" element={<Summary />} />
+        <Route path="custos/ingredientes" element={<Ingredients />} />
+        <Route path="custos/fichas" element={<Recipes />} />
+        <Route path="custos/despesas" element={<Expenses />} />
+        <Route path="custos/equipe" element={<Team />} />
+        <Route path="assistente" element={<Assistant />} />
         <Route path="loja" element={<StoreSettings />} />
         <Route path="conteudo" element={<Content />} />
         <Route path="ajuda" element={<Help />} />

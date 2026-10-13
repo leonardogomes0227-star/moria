@@ -175,7 +175,12 @@ function EditorForm({
       </div>
 
       <fieldset>
-        <legend className="label">Adicionais</legend>
+        <legend className="label">
+          Adicionais{' '}
+          <span className="font-normal text-muted">
+            (nome · preço cobrado · custo para você)
+          </span>
+        </legend>
         <div className="space-y-2">
           {draft.adicionais.map((a, i) => (
             <div key={i} className="flex gap-2">
@@ -190,9 +195,18 @@ function EditorForm({
                 aria-label={`Preço do adicional ${i + 1}`}
                 className="input w-24"
                 inputMode="decimal"
-                placeholder="R$"
+                placeholder="Preço"
                 value={String(a.preco).replace('.', ',')}
                 onChange={(e) => setAddon(i, { preco: toNumber(e.target.value) || 0 })}
+              />
+              <input
+                aria-label={`Custo do adicional ${i + 1} (para a loja)`}
+                title="Quanto este adicional custa para você (usado no cálculo de lucro)"
+                className="input w-24"
+                inputMode="decimal"
+                placeholder="Custo"
+                value={a.custo ? String(a.custo).replace('.', ',') : ''}
+                onChange={(e) => setAddon(i, { custo: toNumber(e.target.value) || 0 })}
               />
               <button
                 type="button"

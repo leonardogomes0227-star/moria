@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { BellIcon, HelpIcon } from '@/components/Icons'
+import { BellIcon, HelpIcon, MoreIcon } from '@/components/Icons'
+import { Dialog } from '@/components/Dialog'
 import { Logo } from '@/components/Logo'
 import { Toaster } from '@/components/Toaster'
 import { fetchSettings } from '@/lib/api'
@@ -28,6 +29,7 @@ export function AdminLayout({ email }: { email: string }) {
   const setSettings = useSettings((s) => s.setSettings)
   const [ready, setReady] = useState(false)
   const [sound, setSound] = useState(isSoundOn)
+  const [moreOpen, setMoreOpen] = useState(false)
   const { pathname } = useLocation()
   const { data, error, reload } = useLoad(() => repo.orders.list(), POLL_MS)
   const orders = data ?? []
@@ -192,9 +194,9 @@ export function AdminLayout({ email }: { email: string }) {
 
       <nav
         aria-label="Painel"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-bg/95 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-bg/95 backdrop-blur lg:hidden"
       >
-        {NAV.map(({ to, label, icon: Icon, end }) => (
+        {NAV.filter((n) => n.primary).map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -212,7 +214,57 @@ export function AdminLayout({ email }: { email: string }) {
             )}
           </NavLink>
         ))}
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          className="flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-white/70"
+        >
+          <MoreIcon size={22} />
+          Mais
+        </button>
       </nav>
+      <Dialog open={moreOpen} onClose={() => setMoreOpen(false)} title="Mais opções">
+        <ul className="space-y-2 p-4">
+          {NAV.filter((n) => !n.primary).map(({ to, title, short, icon: Icon }) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                onClick={() => setMoreOpen(false)}
+                className="flex items-center gap-3 rounded-2xl border border-line bg-bg p-4"
+              >
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand text-white">
+                  <Icon size={22} />
+                </span>
+                <span>
+                  <span className="block font-bold">{title}</span>
+                  <span className="block text-sm text-muted">{short}</span>
+                </span>
+              </NavLink>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreOpen(false)
+                setSound(!sound)
+                setSoundOn(!sound)
+              }}
+              className="flex w-full items-center gap-3 rounded-2xl border border-line bg-bg p-4 text-left"
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10">
+                <BellIcon size={22} />
+              </span>
+              <span>
+                <span className="block font-bold">Som de novo pedido</span>
+                <span className="block text-sm text-muted">
+                  {sound ? 'Ligado: toque para desligar' : 'Desligado: toque para ligar'}
+                </span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </Dialog>
       <Guide open={guideOpen} onClose={closeGuide} />
       <Toaster />
     </div>

@@ -1,17 +1,43 @@
 import { gallery as seedGallery } from '../../data/gallery.ts'
 import { menuItems } from '../../data/menu.ts'
 import { reviews as seedReviews } from '../../data/reviews.ts'
-import type { MenuItem, Order } from '../types.ts'
+import {
+  seedExpenses,
+  seedFinanceSettings,
+  seedIngredients,
+  seedRecipes,
+  seedStaff,
+} from '../../data/financeSeed.ts'
+import { defaultBotSettings } from '../finance/defaults.ts'
+import type {
+  BotConversation,
+  BotSettings,
+  Employee,
+  Expense,
+  FinanceSettings,
+  Ingredient,
+  MenuItem,
+  Order,
+  Recipe,
+} from '../types.ts'
+import { buildDemoConversations } from './demoBot.ts'
 import { buildDemoOrders } from './demoOrders.ts'
-import type { Repo } from './repo.ts'
+import type { Crud, Repo } from './repo.ts'
 
 /** Modo demonstração: tudo fica no localStorage deste navegador. */
 const KEY = {
   menu: 'moria-demo:menu',
   settings: 'moria-demo:settings',
-  orders: 'moria-demo:orders',
+  orders: 'moria-demo:orders-v2',
   reviews: 'moria-demo:reviews',
   gallery: 'moria-demo:gallery',
+  ingredients: 'moria-demo:ingredients',
+  recipes: 'moria-demo:recipes',
+  expenses: 'moria-demo:expenses',
+  staff: 'moria-demo:staff',
+  finance: 'moria-demo:finance',
+  bot: 'moria-demo:bot',
+  botChats: 'moria-demo:bot-chats',
 }
 
 const FULL_MSG =
@@ -70,6 +96,33 @@ function toDataUrl(file: File): Promise<string> {
     img.src = url
   })
 }
+
+/** CRUD genérico sobre uma lista guardada no localStorage. */
+function localCrud<T extends { id: string }>(key: string, seed: () => T[]): Crud<T> {
+  return {
+    list: async () => read<T[]>(key, seed),
+    async save(draft) {
+      const list = read<T[]>(key, seed)
+      if (draft.id) {
+        write(
+          key,
+          list.map((x) => (x.id === draft.id ? ({ ...x, ...draft } as T) : x)),
+        )
+      } else {
+        write(key, [...list, { ...draft, id: newId() } as T])
+      }
+    },
+    async remove(id) {
+      write(
+        key,
+        read<T[]>(key, seed).filter((x) => x.id !== id),
+      )
+    },
+  }
+}
+
+const botChats = () =>
+  read<BotConversation[]>(KEY.botChats, () => buildDemoConversations())
 
 export const localRepo: Repo = {
   mode: 'local',
@@ -186,6 +239,61 @@ export const localRepo: Repo = {
         KEY.gallery,
         read(KEY.gallery, () => seedGallery).filter((p) => p.id !== id),
       )
+    },
+  },
+
+  finance: {
+    ingredients: localCrud<Ingredient>(KEY.ingredients, () => seedIngredients),
+    expenses: localCrud<Expense>(KEY.expenses, () => seedExpenses),
+    staff: localCrud<Employee>(KEY.staff, () => seedStaff),
+    recipes: {
+      list: async () => read<Recipe[]>(KEY.recipes, () => seedRecipes),
+      async save(recipe) {
+        const list = read<Recipe[]>(KEY.recipes, () => seedRecipes)
+        write(KEY.recipes, [...list.filter((r) => r.item_id !== recipe.item_id), recipe])
+      },
+      async remove(itemId) {
+        write(
+          KEY.recipes,
+          read<Recipe[]>(KEY.recipes, () => seedRecipes).filter(
+            (r) => r.item_id !== itemId,
+          ),
+        )
+      },
+    },
+    settings: {
+      get: async () => read<FinanceSettings>(KEY.finance, () => seedFinanceSettings),
+      async save(s) {
+        write(KEY.finance, s)
+      },
+    },
+  },
+
+  bot: {
+    settings: {
+      get: async () => read<BotSettings>(KEY.bot, () => defaultBotSettings),
+      async save(s) {
+        write(KEY.bot, s)
+      },
+    },
+    conversations: async () =>
+      [...botChats()].sort((a, b) => b.ultima_em.localeCompare(a.ultima_em)),
+    async setHuman(telefone, ate) {
+      write(
+        KEY.botChats,
+        botChats().map((c) => (c.telefone === telefone ? { ...c, humano_ate: ate } : c)),
+      )
+    },
+    async usage(month) {
+      const msgs = botChats()
+        .flatMap((c) => c.mensagens)
+        .filter((m) => m.criado_em.startsWith(month))
+      return {
+        mensagens: msgs.length,
+        tokens_in: msgs.reduce((n, m) => n + m.tokens_in, 0),
+        tokens_out: msgs.reduce((n, m) => n + m.tokens_out, 0),
+        tokens_cache: msgs.reduce((n, m) => n + m.tokens_cache, 0),
+      }
     },
   },
 

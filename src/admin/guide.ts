@@ -1,6 +1,8 @@
 import type { ComponentType, SVGProps } from 'react'
 import {
+  BotIcon,
   BurgerIcon,
+  CoinIcon,
   HelpIcon,
   HomeIcon,
   ImageIcon,
@@ -21,6 +23,8 @@ export interface AdminSection {
   does: string[]
   icon: Icon
   end?: boolean
+  /** Aparece direto na barra do celular; as demais ficam no botão “Mais”. */
+  primary?: boolean
 }
 
 export const SECTIONS: AdminSection[] = [
@@ -31,6 +35,7 @@ export const SECTIONS: AdminSection[] = [
     short: 'Resumo do dia',
     icon: HomeIcon,
     end: true,
+    primary: true,
     does: [
       'Veja quantos pedidos e quanto faturou hoje.',
       'Descubra os itens que mais vendem.',
@@ -43,6 +48,7 @@ export const SECTIONS: AdminSection[] = [
     title: 'Pedidos',
     short: 'Acompanhe cada pedido',
     icon: ReceiptIcon,
+    primary: true,
     does: [
       'Todo pedido feito no site aparece aqui como “Novo” (e toca um bipe).',
       'Aperte o botão grande vermelho para avançar: preparo → entrega → concluído.',
@@ -55,10 +61,36 @@ export const SECTIONS: AdminSection[] = [
     title: 'Cardápio',
     short: 'Produtos, preços e fotos',
     icon: BurgerIcon,
+    primary: true,
     does: [
       '“Novo item” cadastra um produto (nome, descrição, preço, foto e adicionais).',
       '“Disponível” liga/desliga o item quando acaba o estoque.',
       '“Mais pedido” coloca o selo de destaque e leva o item para a vitrine do site.',
+    ],
+  },
+  {
+    to: '/admin/custos',
+    label: 'Custos',
+    title: 'Custos e lucro',
+    short: 'Quanto custa e quanto sobra',
+    icon: CoinIcon,
+    primary: true,
+    does: [
+      'Veja o lucro do mês: faturamento menos ingredientes, equipe, motoboy, despesas e impostos.',
+      'Cadastre ingredientes (quanto pagou) e monte a ficha técnica de cada produto para saber o custo e a margem.',
+      'Cadastre despesas fixas, funcionários e o pagamento do motoboy. O sistema sugere o preço certo de venda.',
+    ],
+  },
+  {
+    to: '/admin/assistente',
+    label: 'Assistente',
+    title: 'Assistente de WhatsApp (IA)',
+    short: 'Robô que atende e anota',
+    icon: BotIcon,
+    does: [
+      'Liga ou desliga o assistente que responde seus clientes no WhatsApp e anota pedidos sozinho.',
+      'Defina o nome, o jeito de falar e regras da casa (chave Pix, promoções, avisos).',
+      'Teste uma conversa antes de ligar, veja as conversas e assuma o atendimento quando quiser.',
     ],
   },
   {
