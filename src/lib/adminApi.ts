@@ -1,13 +1,14 @@
 import { MENU_TABLE, SETTINGS_TABLE } from './api'
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import type { MenuItem, StoreSettings } from './types'
 
 const BUCKET = 'menu-images'
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024
 
-function client() {
-  if (!supabase) throw new Error('Supabase não configurado.')
-  return supabase
+async function client() {
+  const sb = await getSupabase()
+  if (!sb) throw new Error('Supabase não configurado.')
+  return sb
 }
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -18,7 +19,9 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 export type MenuDraft = Omit<MenuItem, 'id' | 'ordem'> & { id?: string }
 
 export async function listMenu(): Promise<MenuItem[]> {
-  const res = await client()
+  const res = await (
+    await client()
+  )
     .from(MENU_TABLE)
     .select('*')
     .order('ordem', { ascending: true })
@@ -27,7 +30,7 @@ export async function listMenu(): Promise<MenuItem[]> {
 
 export async function saveItem(draft: MenuDraft, nextOrder: number): Promise<void> {
   const { id, ...fields } = draft
-  const sb = client()
+  const sb = await client()
   const res = id
     ? await sb.from(MENU_TABLE).update(fields).eq('id', id)
     : await sb.from(MENU_TABLE).insert({ ...fields, ordem: nextOrder })
@@ -38,18 +41,18 @@ export async function patchItem(
   id: string,
   patch: Partial<Pick<MenuItem, 'disponivel' | 'destaque'>>,
 ): Promise<void> {
-  const res = await client().from(MENU_TABLE).update(patch).eq('id', id)
+  const res = await (await client()).from(MENU_TABLE).update(patch).eq('id', id)
   if (res.error) throw new Error(res.error.message)
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  const res = await client().from(MENU_TABLE).delete().eq('id', id)
+  const res = await (await client()).from(MENU_TABLE).delete().eq('id', id)
   if (res.error) throw new Error(res.error.message)
 }
 
 /** Troca a posição de dois itens. */
 export async function swapOrder(a: MenuItem, b: MenuItem): Promise<void> {
-  const sb = client()
+  const sb = await client()
   const results = await Promise.all([
     sb
       .from(MENU_TABLE)
@@ -76,7 +79,7 @@ export async function importItems(items: MenuItem[]): Promise<void> {
     adicionais: item.adicionais,
     ordem: index,
   }))
-  const res = await client().from(MENU_TABLE).insert(rows)
+  const res = await (await client()).from(MENU_TABLE).insert(rows)
   if (res.error) throw new Error(res.error.message)
 }
 
@@ -90,7 +93,7 @@ export async function uploadImage(file: File): Promise<string> {
       ?.toLowerCase()
       .replace(/[^a-z0-9]/g, '') || 'jpg'
   const path = `${crypto.randomUUID()}.${ext}`
-  const sb = client()
+  const sb = await client()
   const { error } = await sb.storage
     .from(BUCKET)
     .upload(path, file, { cacheControl: '31536000', contentType: file.type })
@@ -99,7 +102,7 @@ export async function uploadImage(file: File): Promise<string> {
 }
 
 export async function saveSettings(s: StoreSettings): Promise<void> {
-  const res = await client().from(SETTINGS_TABLE).upsert({
+  const res = await (await client()).from(SETTINGS_TABLE).upsert({
     id: 1,
     whatsapp: s.whatsapp,
     hours: s.hours,

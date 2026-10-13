@@ -4,12 +4,14 @@ import * as THREE from 'three'
 import { EmberParticles } from './EmberParticles'
 import { GlbBurger } from './GlbBurger'
 import { ProceduralBurger } from './ProceduralBurger'
+import { useHasModel } from './useBurgerModel'
 
 interface Hero3DProps {
   /** Progresso de explosão em [0,1], lido a cada frame. */
   explode: () => number
   active: boolean
-  useModel: boolean
+  /** Chamado quando o contexto WebGL está pronto (usado para o crossfade do fallback). */
+  onReady: () => void
 }
 
 const AUTO_SPIN = 0.25
@@ -64,10 +66,12 @@ function Rig({ children }: { children: React.ReactNode }) {
   return <group ref={group}>{children}</group>
 }
 
-export default function Hero3D({ explode, active, useModel }: Hero3DProps) {
+export default function Hero3D({ explode, active, onReady }: Hero3DProps) {
+  const useModel = useHasModel()
   return (
     <Canvas
       dpr={[1, 1.5]}
+      onCreated={onReady}
       frameloop={active ? 'always' : 'never'}
       camera={{ position: [0, 0.6, 6.2], fov: 34 }}
       gl={{ antialias: true, powerPreference: 'high-performance', alpha: true }}

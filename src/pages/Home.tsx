@@ -1,15 +1,9 @@
-import { Footer } from '@/sections/Footer'
-import { Gallery } from '@/sections/Gallery'
-import { Hero } from '@/sections/Hero'
-import { Highlights } from '@/sections/Highlights'
-import { Hours } from '@/sections/Hours'
-import { HowItWorks } from '@/sections/HowItWorks'
-import { Location } from '@/sections/Location'
-import { Reviews } from '@/sections/Reviews'
-import { CartBar } from '@/components/CartBar'
-import { CartDrawer } from '@/components/CartDrawer'
+import { lazy, Suspense } from 'react'
 import { Header } from '@/components/Header'
-import { Menu } from '@/sections/Menu'
+import { Hero } from '@/sections/Hero'
+
+const Sections = lazy(() => import('./Sections'))
+const Overlays = lazy(() => import('./Overlays'))
 
 export default function Home() {
   return (
@@ -23,17 +17,13 @@ export default function Home() {
       <Header />
       <main id="conteudo">
         <Hero />
-        <Highlights />
-        <Menu />
-        <HowItWorks />
-        <Hours />
-        <Reviews />
-        <Gallery />
-        <Location />
+        <Suspense fallback={<div className="min-h-[200vh]" aria-hidden="true" />}>
+          <Sections />
+        </Suspense>
       </main>
-      <Footer />
-      <CartBar />
-      <CartDrawer />
+      <Suspense fallback={null}>
+        <Overlays />
+      </Suspense>
     </>
   )
 }

@@ -8,15 +8,4 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules/three/')) return 'three'
-          if (id.includes('@react-three')) return 'r3f'
-          return undefined
-        },
-      },
-    },
-  },
 })

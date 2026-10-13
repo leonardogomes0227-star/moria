@@ -1,5 +1,5 @@
 import { menuItems } from '@/data/menu'
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import type { MenuItem, StoreSettings } from './types'
 
 export const MENU_TABLE = 'menu_items'
@@ -20,6 +20,7 @@ export interface MenuResult {
 
 /** Cardápio: Supabase quando configurado; senão (ou em caso de erro) o seed local. */
 export async function fetchMenu(): Promise<MenuResult> {
+  const supabase = await getSupabase()
   if (!supabase) return { items: menuItems, degraded: false }
   try {
     const { data, error } = await supabase
@@ -35,6 +36,7 @@ export async function fetchMenu(): Promise<MenuResult> {
 }
 
 export async function fetchSettings(): Promise<Partial<StoreSettings> | null> {
+  const supabase = await getSupabase()
   if (!supabase) return null
   try {
     const { data, error } = await supabase

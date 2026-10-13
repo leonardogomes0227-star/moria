@@ -7,7 +7,7 @@ import { Button } from '@/components/Button'
 import { Logo } from '@/components/Logo'
 import { useSession } from '@/hooks/useSession'
 import { fetchSettings } from '@/lib/api'
-import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useSettings } from '@/store/settings'
 
 type Tab = 'cardapio' | 'config'
@@ -60,7 +60,7 @@ function Dashboard() {
             <Button
               variant="ghost"
               className="!px-4 !py-2 text-sm"
-              onClick={() => void supabase?.auth.signOut()}
+              onClick={() => void getSupabase().then((sb) => sb?.auth.signOut())}
             >
               Sair
             </Button>

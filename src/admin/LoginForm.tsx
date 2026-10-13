@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/Button'
 import { Logo } from '@/components/Logo'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -11,6 +11,7 @@ export function LoginForm() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
+    const supabase = await getSupabase()
     if (!supabase) return
     setBusy(true)
     setError('')

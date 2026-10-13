@@ -71,7 +71,6 @@ export function MenuCard({ item, onOpen }: MenuCardProps) {
         type="button"
         onClick={() => onOpen(item)}
         className="relative block text-left"
-        aria-label={`Ver detalhes de ${item.nome}`}
       >
         <MenuImage src={item.imagem} alt={item.nome} categoria={item.categoria} />
         {item.destaque && item.disponivel && (
