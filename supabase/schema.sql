@@ -149,8 +149,10 @@ create table if not exists public.bot_settings (
   telefone_dono  text not null default '',
   modo           text not null default 'sempre' check (modo in ('sempre','fora_do_horario')),
   usd_brl        numeric(6,2) not null default 5.5,
-  modelo         text not null default 'claude-opus-5-5'
+  modelo         text not null default 'claude-sonnet-5-5',
+  limite_mensal  numeric(8,2) not null default 100 check (limite_mensal >= 0)
 );
+alter table public.bot_settings add column if not exists limite_mensal numeric(8,2) not null default 100 check (limite_mensal >= 0);
 
 create table if not exists public.bot_sessions (
   telefone      text primary key,

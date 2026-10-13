@@ -4,6 +4,7 @@ import { repo } from '@/lib/data'
 import type { BotUsage } from '@/lib/data/repo'
 import { formatPrice } from '@/lib/format'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
+import { BOT_MODELS as MODELS, estimateBotCost as estimateCost } from '@/lib/finance/botCost'
 import { defaultBotSettings } from '@/lib/finance/defaults'
 import type { BotConversation, BotSettings } from '@/lib/types'
 import { useMenuStore } from '@/store/menu'
@@ -11,21 +12,8 @@ import { toast } from '@/store/toast'
 import { NumField } from './fields'
 import { Card, ErrorBox, HelpBox, PageHeader, Spinner, Toggle } from './ui'
 
-/** US$ por milhão de tokens (entrada, saída). Leitura de cache custa ~10% da entrada. */
-const MODELS: Record<string, { label: string; in: number; out: number; hint: string }> = {
-  'claude-opus-5-5': { label: 'Opus 5.5 — mais esperto', in: 4, out: 20, hint: 'Melhor para conversas longas e pedidos complicados.' },
-  'claude-sonnet-5-5': { label: 'Sonnet 5.5 — equilibrado', in: 2, out: 10, hint: 'Ótimo custo-benefício para o dia a dia.' },
-  'claude-haiku-5-5': { label: 'Haiku 5.5 — mais barato', in: 0.1, out: 0.5, hint: 'Respostas simples e baratas; erra mais em pedidos complexos.' },
-}
-
 const nowMs = () => Date.now()
 const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-
-function estimateCost(u: BotUsage, model: string, usdBrl: number): number {
-  const m = MODELS[model] ?? MODELS['claude-opus-5-5']
-  const usd = (u.tokens_in * m.in + u.tokens_cache * m.in * 0.1 + u.tokens_out * m.out) / 1_000_000
-  return usd * usdBrl
-}
 
 interface Status {
   anthropic: boolean
@@ -256,7 +244,7 @@ export default function Assistant() {
   const reload = useCallback(async () => {
     try {
       const [s, c, u] = await Promise.all([repo.bot.settings.get(), repo.bot.conversations(), repo.bot.usage(monthKey())])
-      setSettings(s)
+      setSettings({ ...defaultBotSettings, ...s })
       setConvs(c)
       setUsage(u)
       setError('')
@@ -350,7 +338,10 @@ export default function Assistant() {
                 <textarea id="bot-inst" className="input min-h-28" maxLength={2000} value={settings.instrucoes} onChange={(e) => set('instrucoes', e.target.value)} placeholder="Ex.: Chave Pix: CNPJ 00.000.000/0001-00. Terça tem 10% no combo. Não entregamos depois das 23h." />
                 <p className="mt-1 text-xs text-muted">Escreva do seu jeito. O robô segue essas regras, mas nunca muda preços do cardápio.</p>
               </div>
-              <NumField id="bot-usd" label="Cotação do dólar (só para estimar custo)" prefix="R$" value={settings.usd_brl} onChange={(v) => set('usd_brl', v)} className="max-w-48" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <NumField id="bot-limite" label="Limite de gasto com IA por mês" prefix="R$" value={settings.limite_mensal} onChange={(v) => set('limite_mensal', v)} hint="Ao chegar nesse valor, o robô para sozinho, avisa o cliente e chama você. 0 = sem limite." />
+                <NumField id="bot-usd" label="Cotação do dólar (só para estimar custo)" prefix="R$" value={settings.usd_brl} onChange={(v) => set('usd_brl', v)} />
+              </div>
               <Button type="submit" disabled={saving}>{saving ? 'Salvando…' : 'Salvar assistente'}</Button>
             </div>
           </Card>
@@ -358,7 +349,15 @@ export default function Assistant() {
         <Simulator settings={settings} />
         <Card title="Gasto com IA neste mês" description="Estimativa pelo consumo real de tokens e pela cotação acima.">
           <p className="text-3xl font-bold">{formatPrice(cost)}</p>
-          <p className="mt-1 text-sm text-muted">{usage?.mensagens ?? 0} mensagens do cliente respondidas · modelo {model.label.split(' —')[0]}</p>
+          {settings.limite_mensal > 0 && (
+            <>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={settings.limite_mensal} aria-valuenow={Math.min(cost, settings.limite_mensal)} aria-label="Uso do limite mensal">
+                <div className={`h-full ${cost >= settings.limite_mensal ? 'bg-brand' : cost >= settings.limite_mensal * 0.8 ? 'bg-amber-400' : 'bg-[#15803D]'}`} style={{ width: `${Math.min(100, (cost / settings.limite_mensal) * 100)}%` }} />
+              </div>
+              <p className="mt-1 text-sm text-muted">Limite do mês: {formatPrice(settings.limite_mensal)}{cost >= settings.limite_mensal ? ' — atingido, o robô está pausado.' : ''}</p>
+            </>
+          )}
+          <p className="mt-1 text-sm text-muted">{usage?.mensagens ?? 0} mensagens registradas · modelo {model.label.split(' —')[0]}</p>
         </Card>
         <Conversations list={convs} reload={reload} />
       </div>

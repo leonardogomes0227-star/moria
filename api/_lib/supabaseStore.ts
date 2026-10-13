@@ -129,6 +129,18 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
       return count ?? 0
     },
 
+    async monthUsage(now) {
+      const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+      const { data, error } = await sb.from('bot_messages').select('tokens_in,tokens_out,tokens_cache').gte('criado_em', start)
+      ok(error)
+      const rows = (data ?? []) as Usage[]
+      return {
+        tokens_in: rows.reduce((n, m) => n + m.tokens_in, 0),
+        tokens_out: rows.reduce((n, m) => n + m.tokens_out, 0),
+        tokens_cache: rows.reduce((n, m) => n + m.tokens_cache, 0),
+      }
+    },
+
     async saveReply(phone: string, text: string, usage: Usage) {
       const res = await sb.from('bot_messages').insert({ telefone: phone, papel: 'assistente', texto: text.slice(0, 4000), ...usage })
       ok(res.error)

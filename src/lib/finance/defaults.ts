@@ -16,5 +16,6 @@ export const defaultBotSettings: BotSettings = {
   telefone_dono: '',
   modo: 'sempre',
   usd_brl: 5.5,
-  modelo: 'claude-opus-5-5',
+  modelo: 'claude-sonnet-5-5',
+  limite_mensal: 100,
 }

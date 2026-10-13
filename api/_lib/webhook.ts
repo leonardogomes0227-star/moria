@@ -1,3 +1,4 @@
+import { estimateBotCost } from '../../src/lib/finance/botCost.ts'
 import { HANDOFF_FALLBACK, runAgent, type LlmClient } from './agent.js'
 import type { BotStore, ChatTurn, Usage } from './types.js'
 import type { Incoming } from './whatsapp.js'
@@ -10,6 +11,8 @@ export interface WebhookStore extends BotStore {
   historyBefore(phone: string, waId: string, limit: number): Promise<ChatTurn[]>
   humanUntil(phone: string): Promise<Date | null>
   recentCustomerMessages(phone: string, minutes: number): Promise<number>
+  /** Tokens gastos pelo assistente neste mês (para o limite de gasto). */
+  monthUsage(now: Date): Promise<Usage>
   saveReply(phone: string, text: string, usage: Usage): Promise<void>
 }
 
@@ -20,7 +23,7 @@ export interface WebhookDeps {
   now: () => Date
 }
 
-export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'unsupported' | 'replied' | 'error'
+export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'budget' | 'unsupported' | 'replied' | 'error'
 
 const MAX_PER_HOUR = 40
 const MAX_TEXT = 1000
@@ -44,6 +47,13 @@ export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<
       await store.requestHuman(msg.from, msg.name, 'Muitas mensagens em pouco tempo.', 2)
       await send(msg.from, HANDOFF_FALLBACK)
       return 'rate-limited'
+    }
+
+    const limit = Number(info.bot.limite_mensal) || 0
+    if (limit > 0 && estimateBotCost(await store.monthUsage(deps.now()), info.bot.modelo, info.bot.usd_brl) >= limit) {
+      await store.requestHuman(msg.from, msg.name, 'Limite mensal de gasto do assistente atingido. Aumente o limite no painel para religar.', 2)
+      await send(msg.from, HANDOFF_FALLBACK)
+      return 'budget'
     }
 
     if (msg.type !== 'text' || !msg.text.trim()) {

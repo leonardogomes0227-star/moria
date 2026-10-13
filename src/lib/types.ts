@@ -225,6 +225,8 @@ export interface BotSettings {
   /** Cotação usada só para estimar o gasto com IA em reais. */
   usd_brl: number
   modelo: string
+  /** Teto de gasto com IA por mês, em reais. Ao atingir, o robô para e chama uma pessoa. 0 = sem limite. */
+  limite_mensal: number
 }
 
 export interface BotMessage {

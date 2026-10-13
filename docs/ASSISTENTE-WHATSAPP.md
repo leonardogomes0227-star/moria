@@ -39,4 +39,5 @@ informe seu WhatsApp (recebe avisos de handoff) e ligue a chave.
 - Preços e totais são recalculados no servidor; o modelo não consegue inventar valor.
 - Limite de 40 mensagens/hora por cliente; acima disso passa para atendimento humano.
 - Falha técnica → cliente é avisado e a conversa vai para humano; você recebe aviso no WhatsApp.
+- **Limite de gasto:** em Assistente → "Limite de gasto com IA por mês" (padrão R$ 100). Ao atingir, o robô pausa, avisa o cliente e chama uma pessoa. Defina também um limite de gasto no console da Anthropic.
 - Custo: tokens da Anthropic (estimativa no painel) + tarifa de conversas da Meta (consulte a tabela atual da Meta).

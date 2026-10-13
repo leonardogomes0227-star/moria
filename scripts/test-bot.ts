@@ -114,7 +114,7 @@ const goodOrder = {
   assert.ok(JSON.stringify(second.at(-2)).includes('thinking')) // blocos de raciocínio voltam intactos
   // cache + fallback + esforço
   const p = calls[0]
-  assert.equal(p.model, 'claude-opus-5-5')
+  assert.equal(p.model, 'claude-sonnet-5-5')
   assert.deepEqual(p.system, [{ type: 'text', text: p.system && Array.isArray(p.system) ? (p.system[0] as { text: string }).text : '', cache_control: { type: 'ephemeral' } }])
   assert.equal((p as { fallbacks?: string }).fallbacks, 'default')
   assert.deepEqual(p.betas, ['server-side-fallback-2026-07-01'])

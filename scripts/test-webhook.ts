@@ -42,6 +42,7 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
   const humans: string[] = []
   let human: Date | null = null
   let recent = 0
+  let month: Usage = { tokens_in: 0, tokens_out: 0, tokens_cache: 0 }
   let llmCalls = 0
   const store: WebhookStore = {
     loadStore: async () => i,
@@ -53,6 +54,7 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
     historyBefore: async (): Promise<ChatTurn[]> => [],
     humanUntil: async () => human,
     recentCustomerMessages: async () => recent,
+    monthUsage: async () => month,
     saveReply: async (_p, text, usage) => { saved.push({ text, usage }) },
   }
   const llm: LlmClient = {
@@ -63,7 +65,7 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
     },
   }
   const deps = { store, llm, send: async (_t: string, t: string) => { sent.push(t) }, now: () => new Date('2026-10-13T20:00:00Z') }
-  return { deps, sent, saved, humans, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n } }
+  return { deps, sent, saved, humans, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
 }
 function m(id: string, text = 'oi', type = 'text'): Incoming {
   return { id: id, from: '5567999990000', name: 'Ana', type: type, text: text }
@@ -116,5 +118,20 @@ function m(id: string, text = 'oi', type = 'text'): Incoming {
   assert.equal(await handleIncoming(m('1'), s.deps), 'error')
   assert.equal(s.sent[0], HANDOFF_FALLBACK)
   assert.equal(s.humans.length, 1)
+}
+{
+  // limite mensal: Sonnet US$2/10 por MTok, cotação 5,5 → 1 milhão de tokens de saída = R$ 55
+  const s = setup(info({ modelo: 'claude-sonnet-5-5', usd_brl: 5.5, limite_mensal: 50 }))
+  s.setMonth({ tokens_in: 0, tokens_out: 1_000_000, tokens_cache: 0 })
+  assert.equal(await handleIncoming(m('1'), s.deps), 'budget')
+  assert.equal(s.calls(), 0)
+  assert.equal(s.humans.length, 1)
+  assert.equal(s.sent[0], HANDOFF_FALLBACK)
+  const ok = setup(info({ modelo: 'claude-sonnet-5-5', usd_brl: 5.5, limite_mensal: 50 }))
+  ok.setMonth({ tokens_in: 0, tokens_out: 500_000, tokens_cache: 0 })
+  assert.equal(await handleIncoming(m('1'), ok.deps), 'replied')
+  const none = setup(info({ limite_mensal: 0 }))
+  none.setMonth({ tokens_in: 0, tokens_out: 90_000_000, tokens_cache: 0 })
+  assert.equal(await handleIncoming(m('1'), none.deps), 'replied')
 }
 console.log('webhook: todos os testes passaram')
