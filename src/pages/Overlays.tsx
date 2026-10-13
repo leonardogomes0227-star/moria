@@ -1,3 +1,4 @@
+import { AdminDemoButton } from '@/components/AdminDemoButton'
 import { CartBar } from '@/components/CartBar'
 import { CartDrawer } from '@/components/CartDrawer'
 import { MobileCta } from '@/components/MobileCta'
@@ -11,6 +12,7 @@ export default function Overlays() {
       <CartBar />
       <MobileCta />
       <CartDrawer />
+      <AdminDemoButton />
       <Toaster />
     </>
   )

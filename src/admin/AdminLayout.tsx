@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import {
-  BellIcon,
-  BurgerIcon,
-  HelpIcon,
-  HomeIcon,
-  ImageIcon,
-  ReceiptIcon,
-  SettingsIcon,
-} from '@/components/Icons'
+import { BellIcon, HelpIcon } from '@/components/Icons'
 import { Logo } from '@/components/Logo'
 import { Toaster } from '@/components/Toaster'
 import { fetchSettings } from '@/lib/api'
@@ -17,6 +9,8 @@ import type { Order } from '@/lib/types'
 import { toast } from '@/store/toast'
 import { useSettings } from '@/store/settings'
 import { signOut } from './auth'
+import { Guide } from './Guide'
+import { SECTIONS as NAV } from './guide'
 import { beep, isSoundOn, setSoundOn } from './notify'
 import { Spinner } from './ui'
 import { useLoad } from './useLoad'
@@ -27,16 +21,8 @@ export interface AdminContext {
   reloadOrders: () => Promise<void>
 }
 
-const NAV = [
-  { to: '/admin', label: 'Início', icon: HomeIcon, end: true },
-  { to: '/admin/pedidos', label: 'Pedidos', icon: ReceiptIcon },
-  { to: '/admin/cardapio', label: 'Cardápio', icon: BurgerIcon },
-  { to: '/admin/loja', label: 'Loja', icon: SettingsIcon },
-  { to: '/admin/conteudo', label: 'Site', icon: ImageIcon },
-  { to: '/admin/ajuda', label: 'Ajuda', icon: HelpIcon },
-]
-
 const POLL_MS = 15_000
+const GUIDE_KEY = 'moria-admin:guide'
 
 export function AdminLayout({ email }: { email: string }) {
   const setSettings = useSettings((s) => s.setSettings)
@@ -47,6 +33,22 @@ export function AdminLayout({ email }: { email: string }) {
   const orders = data ?? []
   const newCount = orders.filter((o) => o.status === 'novo').length
   const previousNew = useRef<number | null>(null)
+  const [guideOpen, setGuideOpen] = useState(() => {
+    try {
+      return localStorage.getItem(GUIDE_KEY) !== 'seen'
+    } catch {
+      return false
+    }
+  })
+
+  const closeGuide = () => {
+    setGuideOpen(false)
+    try {
+      localStorage.setItem(GUIDE_KEY, 'seen')
+    } catch {
+      /* sem armazenamento: o guia reabre na próxima visita */
+    }
+  }
 
   // As configurações atuais precisam estar carregadas antes de qualquer tela editá-las.
   useEffect(() => {
@@ -76,31 +78,45 @@ export function AdminLayout({ email }: { email: string }) {
 
   const context: AdminContext = { orders, ordersError: error, reloadOrders: reload }
 
+  const guideButton = (
+    <button
+      type="button"
+      onClick={() => setGuideOpen(true)}
+      className="flex w-full items-center gap-2 rounded-xl border border-ember/50 bg-ember/10 px-3 py-2.5 text-left text-sm font-semibold text-ember hover:bg-ember/20"
+    >
+      <HelpIcon size={18} className="shrink-0" /> O que é cada botão?
+    </button>
+  )
+
   return (
     <div className="admin-root min-h-svh lg:flex">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-surface/70 p-5 lg:flex">
+      <aside className="hidden w-72 shrink-0 flex-col border-r border-line bg-surface/70 p-5 lg:flex">
         <div className="sticky top-5 flex h-[calc(100svh-2.5rem)] flex-col">
           <Logo size={48} />
-          <p className="mb-6 mt-3 text-xs uppercase tracking-widest text-muted">
+          <p className="mb-4 mt-3 text-xs uppercase tracking-widest text-muted">
             Painel da loja
           </p>
-          <nav aria-label="Painel" className="flex-1 space-y-1">
-            {NAV.map(({ to, label, icon: Icon, end }) => (
+          {guideButton}
+          <nav aria-label="Painel" className="mt-4 flex-1 space-y-1">
+            {NAV.map(({ to, label, title, short, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium transition-colors ${
+                  `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
                     isActive
                       ? 'bg-brand text-white shadow-glow'
-                      : 'text-white/75 hover:bg-white/5'
+                      : 'text-white/80 hover:bg-white/5'
                   }`
                 }
               >
-                <Icon size={20} />
-                <span className="flex-1">
-                  {label === 'Site' ? 'Conteúdo do site' : label}
+                <Icon size={22} className="shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold leading-tight">
+                    {label === 'Site' ? title : label}
+                  </span>
+                  <span className="block truncate text-xs opacity-75">{short}</span>
                 </span>
                 {to === '/admin/pedidos' && newCount > 0 && (
                   <span className="grid h-5 min-w-5 place-items-center rounded-full bg-white px-1 text-xs font-bold text-brand">
@@ -118,10 +134,12 @@ export function AdminLayout({ email }: { email: string }) {
                 setSoundOn(!sound)
               }}
               aria-pressed={sound}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-white/75 hover:bg-white/5"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-white/75 hover:bg-white/5"
             >
-              <BellIcon size={18} /> Som de novo pedido:{' '}
-              <strong>{sound ? 'ligado' : 'desligado'}</strong>
+              <BellIcon size={18} className="shrink-0" />
+              <span>
+                Som de novo pedido: <strong>{sound ? 'ligado' : 'desligado'}</strong>
+              </span>
             </button>
             <a
               href="/"
@@ -144,11 +162,18 @@ export function AdminLayout({ email }: { email: string }) {
       </aside>
 
       <div className="min-w-0 flex-1 pb-24 lg:pb-0">
-        <header className="flex items-center justify-between border-b border-line bg-surface/70 px-4 py-3 lg:hidden">
-          <Logo size={36} />
-          <div className="flex items-center gap-2 text-sm">
-            <a href="/" className="rounded-pill px-3 py-1.5 text-muted hover:text-white">
-              Ver site
+        <header className="flex items-center justify-between gap-2 border-b border-line bg-surface/70 px-4 py-3 lg:hidden">
+          <Logo size={36} showText={false} />
+          <button
+            type="button"
+            onClick={() => setGuideOpen(true)}
+            className="flex items-center gap-1.5 rounded-pill border border-ember/50 bg-ember/10 px-3 py-1.5 text-sm font-semibold text-ember"
+          >
+            <HelpIcon size={16} /> O que é cada botão?
+          </button>
+          <div className="flex items-center gap-1 text-sm">
+            <a href="/" className="rounded-pill px-2 py-1.5 text-muted hover:text-white">
+              Site
             </a>
             <button
               type="button"
@@ -188,6 +213,7 @@ export function AdminLayout({ email }: { email: string }) {
           </NavLink>
         ))}
       </nav>
+      <Guide open={guideOpen} onClose={closeGuide} />
       <Toaster />
     </div>
   )

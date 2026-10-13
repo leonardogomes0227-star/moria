@@ -7,6 +7,7 @@ import { toast } from '@/store/toast'
 import { useSettings } from '@/store/settings'
 import type { AdminContext } from './AdminLayout'
 import { summarize } from './stats'
+import { Tip } from './Tip'
 import { Card, ErrorBox, PageHeader, StatusBadge, Toggle } from './ui'
 
 function Metric({
@@ -109,14 +110,19 @@ export default function Dashboard() {
                 : 'Fora do horário configurado. O site mostra “Fechado”, mas ainda aceita pedidos (você decide se atende).'}
           </p>
         </div>
-        <label className="flex items-center gap-3 text-sm font-medium">
-          Receber pedidos pelo site
-          <Toggle
-            label="Receber pedidos pelo site"
-            checked={!settings.paused}
-            onChange={(v) => void togglePause(v)}
-          />
-        </label>
+        <Tip
+          text="Desligue para pausar os pedidos pelo site na hora (ex.: cozinha lotada). O cliente vê um aviso. Ligue de novo quando normalizar."
+          side="bottom"
+        >
+          <label className="flex items-center gap-3 text-sm font-medium">
+            Receber pedidos pelo site
+            <Toggle
+              label="Receber pedidos pelo site"
+              checked={!settings.paused}
+              onChange={(v) => void togglePause(v)}
+            />
+          </label>
+        </Tip>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">

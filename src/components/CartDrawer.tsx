@@ -17,6 +17,7 @@ import { Button } from './Button'
 import { Dialog } from './Dialog'
 import { TrashIcon, WhatsappIcon } from './Icons'
 import { QuantityStepper } from './QuantityStepper'
+import { Upsell } from './Upsell'
 
 const TYPES: { value: OrderType; label: string }[] = [
   { value: 'entrega', label: 'Entrega' },
@@ -205,6 +206,8 @@ export function CartDrawer() {
               </li>
             ))}
           </ul>
+
+          <Upsell />
 
           <Segmented
             name="tipo"

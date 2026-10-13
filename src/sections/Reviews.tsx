@@ -68,9 +68,15 @@ export function Reviews() {
                 if (info.offset.x < -SWIPE) go(1)
                 else if (info.offset.x > SWIPE) go(-1)
               }}
-              className="card cursor-grab p-7 text-center active:cursor-grabbing sm:p-9"
+              className="card relative cursor-grab p-7 pt-10 text-center active:cursor-grabbing sm:p-9 sm:pt-12"
               aria-live={paused ? 'polite' : 'off'}
             >
+              <span
+                aria-hidden="true"
+                className="absolute left-6 top-1 font-display text-8xl leading-none text-brand/70"
+              >
+                “
+              </span>
               <div
                 className="mb-4 flex justify-center gap-1 text-ember"
                 role="img"

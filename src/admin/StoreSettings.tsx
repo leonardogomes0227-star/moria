@@ -10,6 +10,7 @@ import {
 } from '@/lib/types'
 import { toast } from '@/store/toast'
 import { useSettings } from '@/store/settings'
+import { Tip } from './Tip'
 import { Card, HelpBox, PageHeader, Toggle } from './ui'
 
 const toNumber = (v: string) => {
@@ -295,9 +296,14 @@ export default function StoreSettings() {
         </Card>
 
         <div className="sticky bottom-20 z-10 flex justify-end lg:bottom-4">
-          <Button onClick={() => void save()} disabled={busy} className="shadow-glow">
-            {busy ? 'Salvando…' : 'Salvar configurações'}
-          </Button>
+          <Tip
+            text="Grava tudo desta página. O site e o carrinho já passam a usar os novos valores."
+            side="top"
+          >
+            <Button onClick={() => void save()} disabled={busy} className="shadow-glow">
+              {busy ? 'Salvando…' : 'Salvar configurações'}
+            </Button>
+          </Tip>
         </div>
       </div>
     </>

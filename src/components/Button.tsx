@@ -15,7 +15,7 @@ const variants: Record<Variant, string> = {
   primary: 'bg-brand text-white shadow-glow hover:bg-brand-light',
   ghost:
     'border border-white/20 bg-white/5 text-white hover:border-ember hover:bg-white/10',
-  whatsapp: 'bg-[#1FA855] text-white hover:bg-[#25C063]',
+  whatsapp: 'bg-[#15803D] text-white hover:bg-[#16A34A]',
 }
 
 type CommonProps = {

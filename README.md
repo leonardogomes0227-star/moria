@@ -35,11 +35,11 @@ Requer Node 20+. Sem nenhuma configuração extra o site funciona por inteiro us
 
 O logo real da Moriá está em `src/assets/logo.png` (o componente `<Logo />` o usa em todo o site; sem esse arquivo ele cai no SVG placeholder). Ícones e favicon: `public/favicon.png`, `public/icon-192.png`, `public/icon-512.png`; imagem de compartilhamento: `public/og.png` (1200×630).
 
-### Fotos
+### Fotos e imagens
 
-- **Hero:** `public/hero/burger.webp` (caminho e dimensões em `config.hero`). A foto atual é um recorte da publicação do Instagram, de baixa resolução: troque pela original em alta (fundo escuro, fade nas bordas funciona melhor).
-- **Itens do cardápio:** coloque as imagens em `public/menu/` e aponte `imagem` em `src/data/menu.ts` (ou envie pelo painel `/admin`, que usa o Supabase Storage). Proporção 4:3 (ex.: 1280×960), WebP/AVIF/JPG. Hoje só hambúrgueres e combos têm foto de exemplo; baguetes, acompanhamentos, molhos e bebidas usam ilustrações de `public/placeholders/` até você enviar fotos reais.
-- **Galeria:** `public/gallery/` + `src/data/gallery.ts` (as 6 fotos atuais são recortes da mesma foto de exemplo).
+- **Hero:** `public/hero/burger.webp` (+ `burger-640.webp` para celular). Caminhos e dimensões em `config.hero`. É um recorte da publicação do Instagram, de baixa resolução: troque pela foto original em alta (fundo escuro funciona melhor, a imagem já tem as bordas esmaecidas em transparência).
+- **Itens do cardápio:** todos têm imagem. Os hambúrgueres de carne usam recortes da foto do Instagram (`public/menu/burger-*.webp`) e os demais itens usam **ilustrações de estúdio** em SVG (`public/menu/*.svg`), geradas por `node scripts/gen-products.mjs`. Para usar foto real, coloque o arquivo em `public/menu/` e aponte `imagem` em `src/data/menu.ts`, ou envie pelo painel em _Cardápio → Editar → Foto_. Proporção 4:3 (ex.: 1280×960), até 3 MB.
+- **Galeria:** `public/gallery/` + `src/data/gallery.ts` (ou pelo painel, em _Conteúdo do site_). Hoje tem a arte do post e recortes da foto de exemplo.
 
 ### Hambúrguer 3D (opcional)
 
@@ -60,7 +60,7 @@ Telas do painel (todas com textos explicativos em português):
 
 ### Modo demonstração (sem configurar nada)
 
-Sem as variáveis do Supabase, o painel funciona em **modo demonstração**: tudo é salvo no `localStorage` do navegador, com pedidos de exemplo para o dashboard não nascer vazio. Login: **`demo@moria.com`** / **`moria123`** (definido em `config.demo`). Faça um pedido no site e ele aparece em _Pedidos_; mude um preço e o site muda. “Ajuda → Restaurar dados de demonstração” volta ao início. Os dados **não** vão para outros aparelhos: para produção, use o Supabase abaixo.
+Sem as variáveis do Supabase, o painel funciona em **modo demonstração**: tudo é salvo no `localStorage` do navegador, com pedidos de exemplo para o dashboard não nascer vazio. Login: **`demo@moria.com`** / **`moria123`** (definido em `config.demo`), escrito em destaque na própria tela de login. No site de demonstração há o botão **“Ver painel do dono”**, que explica o painel e mostra esses dados; no primeiro acesso, o botão **“O que é cada botão?”** abre um guia com a explicação de cada área, e cada botão importante tem um balão explicativo ao passar o mouse. Faça um pedido no site e ele aparece em _Pedidos_; mude um preço e o site muda. “Ajuda → Restaurar dados de demonstração” volta ao início. Os dados **não** vão para outros aparelhos: para produção, use o Supabase abaixo.
 
 ## Supabase (produção) — opcional
 
@@ -104,6 +104,6 @@ supabase/schema.sql
 
 ## Qualidade
 
-- Lighthouse mobile (build de produção, emulação padrão, rede/CPU simuladas): Performance 87–90, Acessibilidade 100, Boas práticas 100, SEO 100.
+- Lighthouse mobile (build de produção, emulação padrão, rede/CPU simuladas): Performance ≈ 86–87, Acessibilidade 100, Boas práticas 100, SEO 100, CLS 0.
 - Responsivo de 320 a 1920 px (sem rolagem horizontal), foco visível, navegação por teclado, `prefers-reduced-motion` respeitado.
 - O status "Aberto agora / Fechado" é calculado no fuso `America/Campo_Grande`, inclusive para expedientes que viram a madrugada.

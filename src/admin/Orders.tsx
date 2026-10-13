@@ -10,6 +10,7 @@ import { toast } from '@/store/toast'
 import type { AdminContext } from './AdminLayout'
 import { Comanda } from './Comanda'
 import { dayKey, isOpenStatus } from './stats'
+import { Tip } from './Tip'
 import { ErrorBox, HelpBox, PageHeader, StatusBadge } from './ui'
 
 type Filter = 'andamento' | 'concluido' | 'cancelado' | 'todos'
@@ -28,6 +29,16 @@ const PERIODS: { id: Period; label: string }[] = [
   { id: '30', label: '30 dias' },
   { id: 'tudo', label: 'Tudo' },
 ]
+
+const nextHelp = (o: Order): string => {
+  if (o.status === 'novo')
+    return 'Confirma que você aceitou o pedido e começou a preparar. O status muda para “Em preparo”.'
+  if (o.status === 'preparo')
+    return o.tipo === 'entrega'
+      ? 'Use quando o entregador sair com o pedido. O status muda para “Saiu para entrega”.'
+      : 'Use quando o pedido ficar pronto no balcão para o cliente retirar.'
+  return 'Use quando o cliente já recebeu. Fecha o pedido e ele passa a contar no faturamento.'
+}
 
 const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   novo: 'preparo',
@@ -134,54 +145,64 @@ function OrderCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         {next && label && (
-          <button
-            type="button"
-            onClick={() => onStatus(order, next)}
-            className="rounded-pill bg-brand px-5 py-2.5 font-semibold hover:bg-brand-light"
-          >
-            {label}
-          </button>
+          <Tip text={nextHelp(order)}>
+            <button
+              type="button"
+              onClick={() => onStatus(order, next)}
+              className="rounded-pill bg-brand px-5 py-2.5 font-semibold hover:bg-brand-light"
+            >
+              {label}
+            </button>
+          </Tip>
         )}
         {isOpenStatus(order.status) && (
-          <button
-            type="button"
-            onClick={() =>
-              window.confirm(`Cancelar o pedido #${order.numero}?`) &&
-              onStatus(order, 'cancelado')
-            }
-            className="rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
-          >
-            Cancelar
-          </button>
+          <Tip text="Cancela o pedido (pede confirmação). Pedido cancelado não conta no faturamento.">
+            <button
+              type="button"
+              onClick={() =>
+                window.confirm(`Cancelar o pedido #${order.numero}?`) &&
+                onStatus(order, 'cancelado')
+              }
+              className="rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
+            >
+              Cancelar
+            </button>
+          </Tip>
         )}
         {!isOpenStatus(order.status) && (
+          <Tip text="Volta o pedido para “Novo”. Útil se você concluiu ou cancelou por engano.">
+            <button
+              type="button"
+              onClick={() => onStatus(order, 'novo')}
+              className="rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
+            >
+              Reabrir (voltar para Novo)
+            </button>
+          </Tip>
+        )}
+        <Tip text="Gera a comanda no tamanho de bobina (80 mm) para levar à cozinha.">
           <button
             type="button"
-            onClick={() => onStatus(order, 'novo')}
-            className="rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
+            onClick={() => onPrint(order)}
+            className="inline-flex items-center gap-2 rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
           >
-            Reabrir (voltar para Novo)
+            <PrinterIcon size={18} /> Imprimir comanda
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onPrint(order)}
-          className="inline-flex items-center gap-2 rounded-pill border border-line px-4 py-2.5 text-sm hover:bg-white/5"
-        >
-          <PrinterIcon size={18} /> Imprimir comanda
-        </button>
+        </Tip>
         {wa && (
-          <a
-            href={whatsappUrl(
-              wa,
-              `Olá, ${order.cliente_nome}! Aqui é da ${config.name} sobre o seu pedido #${order.numero}.`,
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-pill border border-[#1FA855]/50 px-4 py-2.5 text-sm text-[#7BE3A2] hover:bg-[#1FA855]/10"
-          >
-            <WhatsappIcon size={18} /> Chamar cliente
-          </a>
+          <Tip text="Abre o WhatsApp com o cliente, usando o telefone que ele informou no pedido.">
+            <a
+              href={whatsappUrl(
+                wa,
+                `Olá, ${order.cliente_nome}! Aqui é da ${config.name} sobre o seu pedido #${order.numero}.`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-pill border border-[#1FA855]/50 px-4 py-2.5 text-sm text-[#7BE3A2] hover:bg-[#1FA855]/10"
+            >
+              <WhatsappIcon size={18} /> Chamar cliente
+            </a>
+          </Tip>
         )}
       </div>
     </li>

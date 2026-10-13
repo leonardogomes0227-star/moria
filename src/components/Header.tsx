@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { config } from '@/lib/config'
 import { scrollToId } from '@/lib/scroll'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { whatsappUrl } from '@/lib/whatsapp'
 import { selectCount, useCart } from '@/store/cart'
 import { useSettings } from '@/store/settings'
@@ -125,7 +126,7 @@ export function Header() {
               href={whatsappUrl(whatsapp, config.messages.headerWhatsapp)}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden items-center gap-2 rounded-pill bg-[#1FA855] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#25C063] sm:inline-flex"
+              className="hidden items-center gap-2 rounded-pill bg-[#15803D] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#16A34A] sm:inline-flex"
             >
               <WhatsappIcon size={18} /> Pedir no WhatsApp
             </a>
@@ -167,12 +168,22 @@ export function Header() {
                     </a>
                   </li>
                 ))}
+                {!isSupabaseConfigured && (
+                  <li>
+                    <a
+                      href="/admin?demo=1"
+                      className="block rounded-xl border border-ember/40 px-3 py-3 text-base font-medium text-ember hover:bg-ember/10"
+                    >
+                      Ver painel do dono (demonstração) →
+                    </a>
+                  </li>
+                )}
                 <li className="pt-2 sm:hidden">
                   <a
                     href={whatsappUrl(whatsapp, config.messages.headerWhatsapp)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-pill bg-[#1FA855] px-4 py-3 font-semibold"
+                    className="flex items-center justify-center gap-2 rounded-pill bg-[#15803D] px-4 py-3 font-semibold"
                   >
                     <WhatsappIcon size={20} /> Pedir no WhatsApp
                   </a>

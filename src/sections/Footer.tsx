@@ -13,7 +13,7 @@ export function Footer() {
     .map(({ day, h }) => `${DAY_NAMES[day].slice(0, 3)} ${formatHours(h)}`)
 
   return (
-    <footer className="border-t border-line bg-surface/60 pb-24 pt-12 sm:pb-12">
+    <footer className="border-t border-line bg-surface/60 pb-28 pt-12">
       <div className="container-x grid gap-8 md:grid-cols-3">
         <div className="space-y-3">
           <Logo size={72} />
@@ -58,8 +58,16 @@ export function Footer() {
         </div>
       </div>
       <div className="container-x mt-10 flex flex-col items-center justify-between gap-2 border-t border-line pt-6 text-sm text-muted sm:flex-row">
-        <p>
-          © {new Date().getFullYear()} {config.name}
+        <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <span>
+            © {new Date().getFullYear()} {config.name}
+          </span>
+          <a
+            href="/admin"
+            className="underline-offset-2 hover:text-white hover:underline"
+          >
+            Área do dono
+          </a>
         </p>
         <p className="text-xs">
           Site por{' '}

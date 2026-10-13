@@ -40,6 +40,12 @@ export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
     py.set(0)
   }
 
+  const label = added
+    ? 'Adicionado!'
+    : item.adicionais.length > 0
+      ? 'Personalizar e pedir'
+      : 'Adicionar ao pedido'
+
   const handleAdd = (e: MouseEvent<HTMLButtonElement>) => {
     if (item.adicionais.length > 0) return onOpen(item)
     addToCart(
@@ -106,10 +112,10 @@ export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
           <button
             type="button"
             onClick={handleAdd}
-            aria-label={`Adicionar ${item.nome} ao carrinho`}
+            aria-label={`${label}: ${item.nome}`}
             className={`relative mt-3 inline-flex items-center justify-center gap-2 overflow-hidden rounded-pill px-5 py-3 text-sm font-bold uppercase tracking-wide transition-colors ${
               added
-                ? 'bg-[#1FA855] text-white'
+                ? 'bg-[#15803D] text-white'
                 : 'bg-brand text-white hover:bg-brand-light'
             }`}
           >

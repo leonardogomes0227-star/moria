@@ -14,6 +14,7 @@ import { formatPrice } from '@/lib/format'
 import { CATEGORIES, type Category, type MenuItem } from '@/lib/types'
 import { toast } from '@/store/toast'
 import { ItemEditor } from './ItemEditor'
+import { Tip } from './Tip'
 import { ErrorBox, HelpBox, PageHeader, Spinner, Toggle } from './ui'
 import { useLoad } from './useLoad'
 
@@ -86,9 +87,14 @@ export default function MenuManager() {
         title="Cardápio"
         description="Cadastre e organize tudo que você vende. As mudanças aparecem no site na hora."
         actions={
-          <Button onClick={() => setEditing('new')}>
-            <PlusIcon size={18} /> Novo item
-          </Button>
+          <Tip
+            text="Abre o formulário para cadastrar um produto novo no cardápio."
+            side="bottom"
+          >
+            <Button onClick={() => setEditing('new')}>
+              <PlusIcon size={18} /> Novo item
+            </Button>
+          </Tip>
         }
       />
       <HelpBox title="Dicas rápidas">
@@ -205,76 +211,100 @@ export default function MenuManager() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <label className="flex items-center gap-2 text-sm">
-                Disponível{' '}
-                <Toggle
-                  label={`Disponível: ${item.nome}`}
-                  checked={item.disponivel}
-                  onChange={(v) =>
-                    void run(() => repo.menu.patch(item.id, { disponivel: v }))
-                  }
-                />
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                Mais pedido{' '}
-                <Toggle
-                  label={`Mais pedido: ${item.nome}`}
-                  checked={item.destaque}
-                  onChange={(v) =>
-                    void run(() => repo.menu.patch(item.id, { destaque: v }))
-                  }
-                />
-              </label>
-              <div className="ml-auto flex items-center gap-1">
+              <Tip
+                text="Desligue quando o produto acabar. No site ele fica esmaecido e o cliente não consegue pedir."
+                side="bottom"
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  Disponível{' '}
+                  <Toggle
+                    label={`Disponível: ${item.nome}`}
+                    checked={item.disponivel}
+                    onChange={(v) =>
+                      void run(() => repo.menu.patch(item.id, { disponivel: v }))
+                    }
+                  />
+                </label>
+              </Tip>
+              <Tip
+                text="Liga o selo “Mais pedido” no item e o coloca na vitrine “Mais pedidos” do site."
+                side="bottom"
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  Mais pedido{' '}
+                  <Toggle
+                    label={`Mais pedido: ${item.nome}`}
+                    checked={item.destaque}
+                    onChange={(v) =>
+                      void run(() => repo.menu.patch(item.id, { destaque: v }))
+                    }
+                  />
+                </label>
+              </Tip>
+              <div className="ml-auto flex flex-wrap items-center gap-1">
                 {!searching && view === 'todos' && (
                   <>
-                    <button
-                      type="button"
-                      aria-label={`Subir ${item.nome}`}
-                      disabled={index === 0}
-                      onClick={() => move(index, -1)}
-                      className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
-                    >
-                      <ChevronIcon dir="up" size={20} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Descer ${item.nome}`}
-                      disabled={index === list.length - 1}
-                      onClick={() => move(index, 1)}
-                      className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
-                    >
-                      <ChevronIcon dir="down" size={20} />
-                    </button>
+                    <Tip text="Sobe o item uma posição dentro da categoria.">
+                      <button
+                        type="button"
+                        aria-label={`Subir ${item.nome}`}
+                        disabled={index === 0}
+                        onClick={() => move(index, -1)}
+                        className="inline-flex h-10 items-center gap-1 rounded-full px-3 text-sm hover:bg-white/10 disabled:opacity-30"
+                      >
+                        <ChevronIcon dir="up" size={18} />{' '}
+                        <span className="hidden sm:inline">Subir</span>
+                      </button>
+                    </Tip>
+                    <Tip text="Desce o item uma posição dentro da categoria.">
+                      <button
+                        type="button"
+                        aria-label={`Descer ${item.nome}`}
+                        disabled={index === list.length - 1}
+                        onClick={() => move(index, 1)}
+                        className="inline-flex h-10 items-center gap-1 rounded-full px-3 text-sm hover:bg-white/10 disabled:opacity-30"
+                      >
+                        <ChevronIcon dir="down" size={18} />{' '}
+                        <span className="hidden sm:inline">Descer</span>
+                      </button>
+                    </Tip>
                   </>
                 )}
-                <button
-                  type="button"
-                  aria-label={`Duplicar ${item.nome}`}
-                  onClick={() => duplicate(item)}
-                  className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10"
-                >
-                  <CopyIcon size={18} />
-                </button>
-                <Button
-                  variant="ghost"
-                  className="!px-4 !py-2 text-sm"
-                  onClick={() => setEditing(item)}
-                >
-                  Editar
-                </Button>
-                <button
-                  type="button"
-                  aria-label={`Excluir ${item.nome}`}
-                  onClick={() =>
-                    window.confirm(
-                      `Excluir “${item.nome}”? Isso não pode ser desfeito.`,
-                    ) && void run(() => repo.menu.remove(item.id), 'Item excluído.')
-                  }
-                  className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-white/10 hover:text-brand-light"
-                >
-                  <TrashIcon size={18} />
-                </button>
+                <Tip text="Cria uma cópia deste item para você só trocar nome, preço e foto.">
+                  <button
+                    type="button"
+                    aria-label={`Duplicar ${item.nome}`}
+                    onClick={() => duplicate(item)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm hover:bg-white/10"
+                  >
+                    <CopyIcon size={18} />{' '}
+                    <span className="hidden sm:inline">Duplicar</span>
+                  </button>
+                </Tip>
+                <Tip text="Abre o formulário para mudar nome, descrição, preço, foto e adicionais.">
+                  <Button
+                    variant="ghost"
+                    className="!px-4 !py-2 text-sm"
+                    onClick={() => setEditing(item)}
+                  >
+                    Editar
+                  </Button>
+                </Tip>
+                <Tip text="Apaga o item para sempre (pede confirmação). Para só esconder, desligue “Disponível”.">
+                  <button
+                    type="button"
+                    aria-label={`Excluir ${item.nome}`}
+                    onClick={() =>
+                      window.confirm(
+                        `Excluir “${item.nome}”? Isso não pode ser desfeito.`,
+                      ) && void run(() => repo.menu.remove(item.id), 'Item excluído.')
+                    }
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm text-muted hover:bg-white/10 hover:text-brand-light"
+                  >
+                    <TrashIcon size={18} />{' '}
+                    <span className="hidden sm:inline">Excluir</span>
+                  </button>
+                </Tip>
               </div>
             </div>
           </li>

@@ -5,7 +5,11 @@ const OUT = 'public/menu'
 mkdirSync(OUT, { recursive: true })
 
 /* ───────── fundo de estúdio: brilho quente, sombra no chão, brasas ───────── */
-const studio = (tint, art, { steam = true } = {}) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+const studio = (
+  tint,
+  art,
+  { steam = true } = {},
+) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
 <defs>
   <radialGradient id="bg" cx="50%" cy="58%" r="78%"><stop offset="0" stop-color="${tint}"/><stop offset=".5" stop-color="#1c0e0e"/><stop offset="1" stop-color="#0a0d12"/></radialGradient>
   <radialGradient id="rim" cx="50%" cy="100%" r="60%"><stop offset="0" stop-color="#ff6a1a" stop-opacity=".28"/><stop offset="1" stop-color="#ff6a1a" stop-opacity="0"/></radialGradient>
@@ -33,7 +37,22 @@ const burger = ({ patty = 'beef', cheese = true, bacon = false } = {}) => {
       : `<rect x="218" y="352" width="364" height="50" rx="24" fill="url(#${patty === 'veggie' ? 'veg' : 'pty'})"/>
          <g stroke="#1a0c06" stroke-width="3" opacity=".5" stroke-linecap="round"><path d="M260 368l22 22M312 366l22 24M364 366l22 24M416 366l22 24M468 366l22 24M520 368l22 22"/></g>
          <g fill="${patty === 'veggie' ? '#8bbf5a' : '#8a4a28'}" opacity=".7"><circle cx="280" cy="372" r="3"/><circle cx="350" cy="384" r="2.6"/><circle cx="430" cy="372" r="3"/><circle cx="510" cy="384" r="2.6"/></g>`
-  const seeds = [[320, 232, -20], [380, 214, 0], [440, 226, 15], [488, 252, 30], [290, 268, -35], [352, 262, -10], [418, 258, 12], [470, 284, 25], [330, 300, -15], [396, 296, 5], [450, 316, 20], [356, 332, -5], [300, 318, -25], [500, 310, 35]]
+  const seeds = [
+    [320, 232, -20],
+    [380, 214, 0],
+    [440, 226, 15],
+    [488, 252, 30],
+    [290, 268, -35],
+    [352, 262, -10],
+    [418, 258, 12],
+    [470, 284, 25],
+    [330, 300, -15],
+    [396, 296, 5],
+    [450, 316, 20],
+    [356, 332, -5],
+    [300, 318, -25],
+    [500, 310, 35],
+  ]
   return `<g>
   <defs>
     <linearGradient id="bunT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7b955"/><stop offset=".6" stop-color="#d98a2b"/><stop offset="1" stop-color="#a95f17"/></linearGradient>
@@ -64,9 +83,9 @@ const burger = ({ patty = 'beef', cheese = true, bacon = false } = {}) => {
 /* ───────── baguete recheada (vista lateral inclinada) ───────── */
 const baguette = (kind) => {
   const fill = {
-    costela: `<g>${Array.from({ length: 16 }, (_, i) => `<ellipse cx="${210 + i * 24}" cy="${300 + Math.sin(i * 1.7) * 7}" rx="${16 + (i % 3) * 3}" ry="${10 + (i % 2) * 3}" fill="${i % 2 ? '#6a2f17' : '#8c4322'}" transform="rotate(${(i * 23) % 40 - 20} ${210 + i * 24} 300)"/>`).join('')}</g>
+    costela: `<g>${Array.from({ length: 16 }, (_, i) => `<ellipse cx="${210 + i * 24}" cy="${300 + Math.sin(i * 1.7) * 7}" rx="${16 + (i % 3) * 3}" ry="${10 + (i % 2) * 3}" fill="${i % 2 ? '#6a2f17' : '#8c4322'}" transform="rotate(${((i * 23) % 40) - 20} ${210 + i * 24} 300)"/>`).join('')}</g>
        <path d="M190 312c40 14 70-8 110 4s70-8 110 4 70-8 110 4 50-4 70 4" stroke="#ffb400" stroke-width="12" fill="none" stroke-linecap="round"/>`,
-    frango: `<g>${Array.from({ length: 14 }, (_, i) => `<ellipse cx="${216 + i * 26}" cy="${298 + Math.sin(i * 2) * 8}" rx="17" ry="11" fill="${i % 2 ? '#f2d9a8' : '#e6c283'}" transform="rotate(${(i * 31) % 50 - 25} ${216 + i * 26} 298)"/>`).join('')}</g>
+    frango: `<g>${Array.from({ length: 14 }, (_, i) => `<ellipse cx="${216 + i * 26}" cy="${298 + Math.sin(i * 2) * 8}" rx="17" ry="11" fill="${i % 2 ? '#f2d9a8' : '#e6c283'}" transform="rotate(${((i * 31) % 50) - 25} ${216 + i * 26} 298)"/>`).join('')}</g>
        <path d="M190 308c30 16 60-6 90 6s60-6 90 6 60-6 90 6 60-6 90 6 40-4 60 2" stroke="#fff6e0" stroke-width="18" fill="none" stroke-linecap="round"/>
        <g fill="#ffd23a">${Array.from({ length: 16 }, (_, i) => `<circle cx="${220 + i * 22}" cy="${284 + (i % 3) * 6}" r="4.5"/>`).join('')}</g>`,
     calabresa: `<g>${Array.from({ length: 9 }, (_, i) => `<g><ellipse cx="${226 + i * 40}" cy="${298 + (i % 2) * 8}" rx="19" ry="16" fill="#a8301f"/><ellipse cx="${226 + i * 40}" cy="${298 + (i % 2) * 8}" rx="14" ry="11" fill="#c9482e"/><circle cx="${220 + i * 40}" cy="${294 + (i % 2) * 8}" r="2.4" fill="#f1a08a"/><circle cx="${232 + i * 40}" cy="${301 + (i % 2) * 8}" r="2.2" fill="#f1a08a"/></g>`).join('')}</g>
@@ -103,7 +122,7 @@ const fries = (variant) => {
   }).join('')
   const sauce =
     variant === 'cheddar'
-      ? `<path d="M300 248c14 16 28-4 44 8s26-8 44 4 28-10 44 4 26-6 44 6 20-4 34 2c-10 26-30 8-44 22s-30-6-46 10-30-4-44 10-28-6-44 8-26-2-40 10c-6-30 8-40 8-82z" fill="#ffa81c"/><path d="M308 252c20 8 40-6 60 4s40-8 60 2" stroke="#fff" stroke-opacity=".55" stroke-width="4" fill="none" stroke-linecap="round"/><g fill="#a82a1c">${Array.from({ length: 14 }, (_, i) => `<rect x="${310 + i * 18}" y="${250 + ((i * 7) % 28)}" width="11" height="6" rx="2" transform="rotate(${(i * 29) % 60 - 30} ${310 + i * 18} 255)"/>`).join('')}</g>`
+      ? `<path d="M300 248c14 16 28-4 44 8s26-8 44 4 28-10 44 4 26-6 44 6 20-4 34 2c-10 26-30 8-44 22s-30-6-46 10-30-4-44 10-28-6-44 8-26-2-40 10c-6-30 8-40 8-82z" fill="#ffa81c"/><path d="M308 252c20 8 40-6 60 4s40-8 60 2" stroke="#fff" stroke-opacity=".55" stroke-width="4" fill="none" stroke-linecap="round"/><g fill="#a82a1c">${Array.from({ length: 14 }, (_, i) => `<rect x="${310 + i * 18}" y="${250 + ((i * 7) % 28)}" width="11" height="6" rx="2" transform="rotate(${((i * 29) % 60) - 30} ${310 + i * 18} 255)"/>`).join('')}</g>`
       : ''
   return `<g>
   <defs><linearGradient id="fr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6c744"/><stop offset=".5" stop-color="#ffdf6b"/><stop offset="1" stop-color="#d99a1c"/></linearGradient>
@@ -119,8 +138,17 @@ const fries = (variant) => {
 
 const rings = () => `<g>
   <defs><radialGradient id="rg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffdf7a"/><stop offset="1" stop-color="#c8801a"/></radialGradient></defs>
-  ${[[300, 410, 118], [500, 410, 118], [400, 330, 126], [330, 250, 112], [470, 250, 112]]
-    .map(([cx, cy, r], i) => `<g transform="rotate(${i * 9 - 18} ${cx} ${cy})"><ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 0.62}" fill="url(#rg)"/><ellipse cx="${cx}" cy="${cy + 4}" rx="${r * 0.55}" ry="${r * 0.3}" fill="#1c0e0e"/><ellipse cx="${cx - r * 0.2}" cy="${cy - r * 0.28}" rx="${r * 0.4}" ry="${r * 0.07}" fill="#fff" opacity=".5"/><g fill="#a2600f" opacity=".6">${Array.from({ length: 9 }, (_, k) => `<circle cx="${cx - r * 0.8 + k * r * 0.2}" cy="${cy + Math.sin(k) * r * 0.2}" r="3"/>`).join('')}</g></g>`)
+  ${[
+    [300, 410, 118],
+    [500, 410, 118],
+    [400, 330, 126],
+    [330, 250, 112],
+    [470, 250, 112],
+  ]
+    .map(
+      ([cx, cy, r], i) =>
+        `<g transform="rotate(${i * 9 - 18} ${cx} ${cy})"><ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 0.62}" fill="url(#rg)"/><ellipse cx="${cx}" cy="${cy + 4}" rx="${r * 0.55}" ry="${r * 0.3}" fill="#1c0e0e"/><ellipse cx="${cx - r * 0.2}" cy="${cy - r * 0.28}" rx="${r * 0.4}" ry="${r * 0.07}" fill="#fff" opacity=".5"/><g fill="#a2600f" opacity=".6">${Array.from({ length: 9 }, (_, k) => `<circle cx="${cx - r * 0.8 + k * r * 0.2}" cy="${cy + Math.sin(k) * r * 0.2}" r="3"/>`).join('')}</g></g>`,
+    )
     .join('')}</g>`
 
 /* ───────── molhos: pote kraft + bisnaga ───────── */
@@ -176,10 +204,12 @@ const juice = () => `<g>
   </g>`
 
 /** Escala a arte em torno do centro do quadro (e desloca no eixo Y). */
-const fit = (art, k, dy = 0) => `<g transform="translate(400 ${330 + dy}) scale(${k}) translate(-400 -330)">${art}</g>`
+const fit = (art, k, dy = 0) =>
+  `<g transform="translate(400 ${330 + dy}) scale(${k}) translate(-400 -330)">${art}</g>`
 
 /** Posiciona uma arte (centrada em 400,330) no ponto (cx, cy) com escala k. */
-const place = (art, cx, cy, k) => `<g transform="translate(${cx} ${cy}) scale(${k}) translate(-400 -330)">${art}</g>`
+const place = (art, cx, cy, k) =>
+  `<g transform="translate(${cx} ${cy}) scale(${k}) translate(-400 -330)">${art}</g>`
 
 /* ───────── montagem ───────── */
 const files = {
@@ -187,20 +217,38 @@ const files = {
   'baguete-frango': studio('#6f4a1a', fit(baguette('frango'), 1.15, -10)),
   'baguete-calabresa': studio('#7a1d12', fit(baguette('calabresa'), 1.15, -10)),
   'baguete-bacon': studio('#7a2a12', fit(baguette('bacon'), 1.15, -10)),
-  'batata': studio('#6b3a10', fit(fries('simples'), 1.12, -5)),
+  batata: studio('#6b3a10', fit(fries('simples'), 1.12, -5)),
   'batata-cheddar': studio('#7a3a10', fit(fries('cheddar'), 1.12, -5)),
   'aneis-cebola': studio('#6b3a10', rings()),
-  'molho-artesanal': studio('#7a2a12', fit(sauce('#ff7a1a', '#c4400a', 'ARTESANAL'), 1.12, 0)),
-  'molho-barbecue': studio('#4a1a0a', fit(sauce('#6b2a12', '#2a0f08', 'BARBECUE'), 1.12, 0)),
-  'molho-alho': studio('#5a4a30', fit(sauce('#fbf3e0', '#d9c9a0', 'ALHO', '#3a2a12'), 1.12, 0)),
+  'molho-artesanal': studio(
+    '#7a2a12',
+    fit(sauce('#ff7a1a', '#c4400a', 'ARTESANAL'), 1.12, 0),
+  ),
+  'molho-barbecue': studio(
+    '#4a1a0a',
+    fit(sauce('#6b2a12', '#2a0f08', 'BARBECUE'), 1.12, 0),
+  ),
+  'molho-alho': studio(
+    '#5a4a30',
+    fit(sauce('#fbf3e0', '#d9c9a0', 'ALHO', '#3a2a12'), 1.12, 0),
+  ),
   'refrigerante-lata': studio('#7a1212', can()),
   'refrigerante-1l': studio('#4a1a0e', bottle()),
-  'suco': studio('#7a3a0a', juice()),
-  'frango': studio('#7a3a12', burger({ patty: 'chicken', cheese: false })),
-  'veggie': studio('#2a4a1a', burger({ patty: 'veggie', cheese: false })),
-  'combo-classico': studio('#7a1d12', `${place(fries('simples'), 590, 290, 0.66)}${place(burger(), 285, 350, 0.82)}${place(can(), 628, 420, 0.5)}`),
-  'combo-casal': studio('#7a1d12', `${place(fries('cheddar'), 600, 290, 0.6)}${place(burger({ bacon: true }), 235, 330, 0.6)}${place(burger(), 400, 390, 0.62)}${place(can(), 560, 450, 0.4)}${place(can(), 650, 455, 0.4)}`),
-  'combo-baguete': studio('#7a3a12', `${place(fries('simples'), 610, 290, 0.62)}${place(baguette('costela'), 320, 340, 0.82)}${place(can(), 640, 440, 0.46)}`),
+  suco: studio('#7a3a0a', juice()),
+  frango: studio('#7a3a12', burger({ patty: 'chicken', cheese: false })),
+  veggie: studio('#2a4a1a', burger({ patty: 'veggie', cheese: false })),
+  'combo-classico': studio(
+    '#7a1d12',
+    `${place(fries('simples'), 590, 290, 0.66)}${place(burger(), 285, 350, 0.82)}${place(can(), 628, 420, 0.5)}`,
+  ),
+  'combo-casal': studio(
+    '#7a1d12',
+    `${place(fries('cheddar'), 600, 290, 0.6)}${place(burger({ bacon: true }), 235, 330, 0.6)}${place(burger(), 400, 390, 0.62)}${place(can(), 560, 450, 0.4)}${place(can(), 650, 455, 0.4)}`,
+  ),
+  'combo-baguete': studio(
+    '#7a3a12',
+    `${place(fries('simples'), 610, 290, 0.62)}${place(baguette('costela'), 320, 340, 0.82)}${place(can(), 640, 440, 0.46)}`,
+  ),
 }
 
 for (const [name, svg] of Object.entries(files)) writeFileSync(`${OUT}/${name}.svg`, svg)

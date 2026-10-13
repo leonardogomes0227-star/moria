@@ -14,11 +14,22 @@ export function seoPlugin(): Plugin {
   }
   return {
     name: 'moria-seo',
-    transformIndexHtml(html) {
-      const replaced = html.replace(
-        /%(SEO_[A-Z_]+)%/g,
-        (_, key: string) => values[key] ?? '',
-      )
+    transformIndexHtml(html, ctx) {
+      // Preload das fontes principais: evita a troca de fonte (e o salto de layout) depois da primeira pintura.
+      const fonts = Object.keys(ctx.bundle ?? {})
+        .filter((f) =>
+          /(anton-latin-400|inter-latin-(400|600)|permanent-marker-latin-400)-normal.*\.woff2$/.test(
+            f,
+          ),
+        )
+        .map(
+          (f) =>
+            `<link rel="preload" as="font" type="font/woff2" crossorigin href="/${f}" />`,
+        )
+        .join('\n    ')
+      const replaced = html
+        .replace('</head>', `    ${fonts}\n  </head>`)
+        .replace(/%(SEO_[A-Z_]+)%/g, (_, key: string) => values[key] ?? '')
       const ld = `<script type="application/ld+json">${JSON.stringify(buildJsonLd())}</script>`
       return replaced.replace('</head>', `    ${ld}\n  </head>`)
     },
