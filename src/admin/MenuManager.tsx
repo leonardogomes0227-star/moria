@@ -1,148 +1,182 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/Button'
-import { ChevronIcon, PlusIcon, TrashIcon } from '@/components/Icons'
+import {
+  ChevronIcon,
+  CopyIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
+} from '@/components/Icons'
 import { MenuImage } from '@/components/MenuImage'
 import { menuItems as seed } from '@/data/menu'
-import {
-  deleteItem,
-  importItems,
-  listMenu,
-  patchItem,
-  saveItem,
-  swapOrder,
-  type MenuDraft,
-} from '@/lib/adminApi'
+import { repo, type MenuDraft } from '@/lib/data'
 import { formatPrice } from '@/lib/format'
 import { CATEGORIES, type Category, type MenuItem } from '@/lib/types'
+import { toast } from '@/store/toast'
 import { ItemEditor } from './ItemEditor'
+import { ErrorBox, HelpBox, PageHeader, Spinner, Toggle } from './ui'
+import { useLoad } from './useLoad'
 
-function Toggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-white/15'}`}
-    >
-      <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-6' : 'left-1'}`}
-      />
-    </button>
-  )
-}
+type View = 'todos' | 'indisponiveis' | 'destaques'
 
-export function MenuManager() {
-  const [items, setItems] = useState<MenuItem[] | null>(null)
-  const [error, setError] = useState('')
+const normalize = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+
+export default function MenuManager() {
+  const { data, error, reload } = useLoad(() => repo.menu.list())
+  const items = useMemo(() => data ?? [], [data])
   const [category, setCategory] = useState<Category>(CATEGORIES[0])
+  const [view, setView] = useState<View>('todos')
+  const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<MenuItem | 'new' | null>(null)
 
-  const refresh = useCallback(async () => {
-    try {
-      setItems(await listMenu())
-      setError('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao carregar o cardápio.')
-    }
-  }, [])
+  const searching = query.trim().length > 0
+  const list = useMemo(() => {
+    const q = normalize(query.trim())
+    return items.filter((i) => {
+      if (searching) return normalize(i.nome).includes(q)
+      if (i.categoria !== category) return false
+      if (view === 'indisponiveis') return !i.disponivel
+      if (view === 'destaques') return i.destaque
+      return true
+    })
+  }, [items, category, view, query, searching])
 
-  useEffect(() => {
-    let cancelled = false
-    listMenu()
-      .then((data) => !cancelled && setItems(data))
-      .catch(
-        (err: unknown) =>
-          !cancelled &&
-          setError(err instanceof Error ? err.message : 'Falha ao carregar o cardápio.'),
-      )
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const nextOrder = Math.max(-1, ...items.map((i) => i.ordem ?? 0)) + 1
+  const countOf = (c: Category) => items.filter((i) => i.categoria === c).length
 
-  const run = async (action: () => Promise<void>) => {
+  const run = async (action: () => Promise<void>, okMessage?: string) => {
     try {
       await action()
-      await refresh()
+      await reload()
+      if (okMessage) toast(okMessage)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Operação falhou.')
+      toast(err instanceof Error ? err.message : 'Operação falhou.', 'error')
     }
   }
-
-  const list = (items ?? []).filter((i) => i.categoria === category)
-  const nextOrder = Math.max(-1, ...(items ?? []).map((i) => i.ordem ?? 0)) + 1
 
   const move = (index: number, delta: -1 | 1) => {
     const other = list[index + delta]
-    if (other) void run(() => swapOrder(list[index], other))
+    if (other) void run(() => repo.menu.swap(list[index], other))
   }
 
   const handleSave = async (draft: MenuDraft) => {
-    await saveItem(draft, nextOrder)
+    await repo.menu.save(draft, nextOrder)
     setEditing(null)
-    await refresh()
+    await reload()
+    toast(draft.id ? 'Item atualizado.' : 'Item criado.')
   }
 
-  return (
-    <div className="space-y-5">
-      {error && (
-        <p
-          role="alert"
-          className="rounded-xl border border-brand/50 bg-brand/10 px-4 py-3 text-sm text-[#FF8A8A]"
-        >
-          {error}
-        </p>
-      )}
+  const duplicate = (item: MenuItem) =>
+    void run(
+      () =>
+        repo.menu.save(
+          { ...item, id: undefined, nome: `${item.nome} (cópia)`, destaque: false },
+          nextOrder,
+        ),
+      'Item duplicado. Edite o nome e o preço.',
+    )
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div
-          role="tablist"
-          aria-label="Categorias"
-          className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1"
-        >
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              role="tab"
-              type="button"
-              aria-selected={c === category}
-              onClick={() => setCategory(c)}
-              className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold ${c === category ? 'bg-brand' : 'bg-white/5 hover:bg-white/10'}`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        <Button onClick={() => setEditing('new')}>
-          <PlusIcon size={18} /> Novo item
-        </Button>
+  return (
+    <>
+      <PageHeader
+        title="Cardápio"
+        description="Cadastre e organize tudo que você vende. As mudanças aparecem no site na hora."
+        actions={
+          <Button onClick={() => setEditing('new')}>
+            <PlusIcon size={18} /> Novo item
+          </Button>
+        }
+      />
+      <HelpBox title="Dicas rápidas">
+        <p>
+          <strong>Disponível:</strong> desligue quando acabar o produto. Ele continua
+          aparecendo no site, mas esmaecido e sem botão de pedir.
+        </p>
+        <p>
+          <strong>Mais pedido:</strong> coloca o selo no item e o exibe no carrossel “Mais
+          pedidos da casa”.
+        </p>
+        <p>
+          <strong>Setas:</strong> mudam a posição do item dentro da categoria.{' '}
+          <strong>Adicionais:</strong> extras opcionais que o cliente escolhe (ex.: bacon
+          + R$ 5,00).
+        </p>
+      </HelpBox>
+      {error && <ErrorBox message={error} onRetry={() => void reload()} />}
+
+      <div
+        role="tablist"
+        aria-label="Categorias"
+        className="scrollbar-none -mx-1 mb-4 flex gap-2 overflow-x-auto px-1"
+      >
+        {CATEGORIES.map((c) => (
+          <button
+            key={c}
+            role="tab"
+            type="button"
+            aria-selected={!searching && c === category}
+            onClick={() => {
+              setQuery('')
+              setCategory(c)
+            }}
+            className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold ${!searching && c === category ? 'bg-brand' : 'bg-white/5 hover:bg-white/10'}`}
+          >
+            {c} <span className="opacity-70">({countOf(c)})</span>
+          </button>
+        ))}
       </div>
 
-      {items === null && !error && <p className="text-muted">Carregando…</p>}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-52 flex-1 sm:max-w-xs">
+          <SearchIcon
+            size={18}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+          />
+          <input
+            type="search"
+            aria-label="Buscar item"
+            placeholder="Buscar em todo o cardápio"
+            className="input py-2.5 pl-10"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        {!searching && (
+          <select
+            aria-label="Filtrar itens"
+            className="input w-auto"
+            value={view}
+            onChange={(e) => setView(e.target.value as View)}
+          >
+            <option value="todos">Todos</option>
+            <option value="indisponiveis">Só indisponíveis</option>
+            <option value="destaques">Só “mais pedidos”</option>
+          </select>
+        )}
+      </div>
 
-      {items?.length === 0 && (
+      {data === null && !error && <Spinner />}
+
+      {data && items.length === 0 && (
         <div className="card space-y-3 p-6 text-center">
-          <p className="text-muted">
-            O cardápio do banco está vazio (o site mostra o exemplo de src/data/menu.ts).
-          </p>
-          <Button variant="ghost" onClick={() => void run(() => importItems(seed))}>
+          <p className="text-muted">O cardápio está vazio.</p>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              void run(() => repo.menu.importMany(seed), 'Cardápio de exemplo importado.')
+            }
+          >
             Importar cardápio de exemplo
           </Button>
         </div>
       )}
 
-      {items && items.length > 0 && list.length === 0 && (
-        <p className="py-8 text-center text-muted">Nenhum item nesta categoria.</p>
+      {data && items.length > 0 && list.length === 0 && (
+        <p className="py-8 text-center text-muted">Nenhum item encontrado aqui.</p>
       )}
 
       <ul className="space-y-3">
@@ -156,8 +190,18 @@ export function MenuManager() {
                 <MenuImage src={item.imagem} alt="" categoria={item.categoria} />
               </div>
               <div className="min-w-0">
-                <p className="truncate font-semibold">{item.nome}</p>
-                <p className="text-sm text-muted">{formatPrice(item.preco)}</p>
+                <p className="truncate font-semibold">
+                  {item.nome}
+                  {!item.disponivel && (
+                    <span className="ml-2 text-xs text-muted">(indisponível)</span>
+                  )}
+                </p>
+                <p className="text-sm text-muted">
+                  {formatPrice(item.preco)}
+                  {searching && ` · ${item.categoria}`}
+                  {item.adicionais.length > 0 &&
+                    ` · ${item.adicionais.length} adicional(is)`}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -166,35 +210,51 @@ export function MenuManager() {
                 <Toggle
                   label={`Disponível: ${item.nome}`}
                   checked={item.disponivel}
-                  onChange={(v) => void run(() => patchItem(item.id, { disponivel: v }))}
+                  onChange={(v) =>
+                    void run(() => repo.menu.patch(item.id, { disponivel: v }))
+                  }
                 />
               </label>
               <label className="flex items-center gap-2 text-sm">
-                Destaque{' '}
+                Mais pedido{' '}
                 <Toggle
                   label={`Mais pedido: ${item.nome}`}
                   checked={item.destaque}
-                  onChange={(v) => void run(() => patchItem(item.id, { destaque: v }))}
+                  onChange={(v) =>
+                    void run(() => repo.menu.patch(item.id, { destaque: v }))
+                  }
                 />
               </label>
               <div className="ml-auto flex items-center gap-1">
+                {!searching && view === 'todos' && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label={`Subir ${item.nome}`}
+                      disabled={index === 0}
+                      onClick={() => move(index, -1)}
+                      className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
+                    >
+                      <ChevronIcon dir="up" size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Descer ${item.nome}`}
+                      disabled={index === list.length - 1}
+                      onClick={() => move(index, 1)}
+                      className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
+                    >
+                      <ChevronIcon dir="down" size={20} />
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
-                  aria-label={`Subir ${item.nome}`}
-                  disabled={index === 0}
-                  onClick={() => move(index, -1)}
-                  className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
+                  aria-label={`Duplicar ${item.nome}`}
+                  onClick={() => duplicate(item)}
+                  className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10"
                 >
-                  <ChevronIcon dir="up" size={20} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Descer ${item.nome}`}
-                  disabled={index === list.length - 1}
-                  onClick={() => move(index, 1)}
-                  className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/10 disabled:opacity-30"
-                >
-                  <ChevronIcon dir="down" size={20} />
+                  <CopyIcon size={18} />
                 </button>
                 <Button
                   variant="ghost"
@@ -207,8 +267,9 @@ export function MenuManager() {
                   type="button"
                   aria-label={`Excluir ${item.nome}`}
                   onClick={() =>
-                    window.confirm(`Excluir “${item.nome}”?`) &&
-                    void run(() => deleteItem(item.id))
+                    window.confirm(
+                      `Excluir “${item.nome}”? Isso não pode ser desfeito.`,
+                    ) && void run(() => repo.menu.remove(item.id), 'Item excluído.')
                   }
                   className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-white/10 hover:text-brand-light"
                 >
@@ -226,6 +287,6 @@ export function MenuManager() {
         onClose={() => setEditing(null)}
         onSave={handleSave}
       />
-    </div>
+    </>
   )
 }

@@ -1,16 +1,8 @@
+import { gallery as seedGallery } from '@/data/gallery'
 import { menuItems } from '@/data/menu'
-import { getSupabase } from './supabase'
-import type { MenuItem, StoreSettings } from './types'
-
-export const MENU_TABLE = 'menu_items'
-export const SETTINGS_TABLE = 'store_settings'
-
-interface SettingsRow {
-  whatsapp: string
-  hours: StoreSettings['hours']
-  delivery_fee: StoreSettings['deliveryFee']
-  notice: string
-}
+import { reviews as seedReviews } from '@/data/reviews'
+import { repo } from './data'
+import type { GalleryPhoto, MenuItem, Review, StoreSettings } from './types'
 
 export interface MenuResult {
   items: MenuItem[]
@@ -18,41 +10,40 @@ export interface MenuResult {
   degraded: boolean
 }
 
-/** Cardápio: Supabase quando configurado; senão (ou em caso de erro) o seed local. */
+/** Cardápio público: banco/demo; no Supabase vazio ou com erro, cai no seed local. */
 export async function fetchMenu(): Promise<MenuResult> {
-  const supabase = await getSupabase()
-  if (!supabase) return { items: menuItems, degraded: false }
   try {
-    const { data, error } = await supabase
-      .from(MENU_TABLE)
-      .select('*')
-      .order('ordem', { ascending: true })
-    if (error) throw error
-    if (!data || data.length === 0) return { items: menuItems, degraded: false }
-    return { items: data as MenuItem[], degraded: false }
+    const items = await repo.menu.list()
+    if (items.length === 0 && repo.mode === 'supabase')
+      return { items: menuItems, degraded: false }
+    return { items, degraded: false }
   } catch {
     return { items: menuItems, degraded: true }
   }
 }
 
 export async function fetchSettings(): Promise<Partial<StoreSettings> | null> {
-  const supabase = await getSupabase()
-  if (!supabase) return null
   try {
-    const { data, error } = await supabase
-      .from(SETTINGS_TABLE)
-      .select('*')
-      .eq('id', 1)
-      .maybeSingle()
-    if (error || !data) return null
-    const row = data as SettingsRow
-    return {
-      whatsapp: row.whatsapp,
-      hours: row.hours,
-      deliveryFee: row.delivery_fee,
-      notice: row.notice,
-    }
+    return await repo.settings.get()
   } catch {
     return null
+  }
+}
+
+export async function fetchReviews(): Promise<Review[]> {
+  try {
+    const list = await repo.reviews.list()
+    return list.length > 0 || repo.mode === 'local' ? list : seedReviews
+  } catch {
+    return seedReviews
+  }
+}
+
+export async function fetchGallery(): Promise<GalleryPhoto[]> {
+  try {
+    const list = await repo.gallery.list()
+    return list.length > 0 || repo.mode === 'local' ? list : seedGallery
+  } catch {
+    return seedGallery
   }
 }

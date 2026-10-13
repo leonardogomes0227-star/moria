@@ -15,6 +15,7 @@ export interface CartLine {
 export interface Checkout {
   tipo: OrderType
   nome: string
+  telefone: string
   endereco: string
   pagamento: PaymentMethod
   troco: string
@@ -51,6 +52,7 @@ export const lineTotal = (l: CartLine) => unitPrice(l) * l.qtd
 const emptyCheckout: Checkout = {
   tipo: 'entrega',
   nome: '',
+  telefone: '',
   endereco: '',
   pagamento: 'Pix',
   troco: '',

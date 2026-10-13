@@ -1,14 +1,16 @@
 import { useMemo, useRef, useState } from 'react'
 import { config } from '@/lib/config'
 import { formatPrice } from '@/lib/format'
+import { repo } from '@/lib/data'
 import {
   buildOrderMessage,
+  buildOrderRecord,
   computeTotals,
   validateCheckout,
   type CheckoutErrors,
 } from '@/lib/order'
 import { whatsappUrl } from '@/lib/whatsapp'
-import type { OrderType, PaymentMethod } from '@/lib/types'
+import type { OrderType } from '@/lib/types'
 import { lineTotal, unitPrice, useCart } from '@/store/cart'
 import { useSettings } from '@/store/settings'
 import { Button } from './Button'
@@ -16,7 +18,6 @@ import { Dialog } from './Dialog'
 import { TrashIcon, WhatsappIcon } from './Icons'
 import { QuantityStepper } from './QuantityStepper'
 
-const PAYMENTS: PaymentMethod[] = ['Pix', 'Cartão', 'Dinheiro']
 const TYPES: { value: OrderType; label: string }[] = [
   { value: 'entrega', label: 'Entrega' },
   { value: 'retirada', label: 'Retirada' },
@@ -86,7 +87,9 @@ function Segmented<T extends string>({
 export function CartDrawer() {
   const { lines, checkout, isOpen, setOpen, setQty, remove, setCheckout, finishOrder } =
     useCart()
-  const { deliveryFee, whatsapp } = useSettings((s) => s.settings)
+  const { deliveryFee, whatsapp, paused, pauseMessage, payments, minOrder } = useSettings(
+    (s) => s.settings,
+  )
   const [errors, setErrors] = useState<CheckoutErrors>({})
   const [sent, setSent] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
@@ -104,13 +107,17 @@ export function CartDrawer() {
   }
 
   const submit = () => {
-    const found = validateCheckout(lines, checkout)
+    const found = validateCheckout(lines, checkout, minOrder)
     setErrors(found)
     if (Object.keys(found).length > 0) {
       if (found.nome) nameRef.current?.focus()
       else if (found.endereco) addressRef.current?.focus()
       return
     }
+    // O registro no painel nunca bloqueia o pedido: se falhar, o WhatsApp abre do mesmo jeito.
+    void repo.orders
+      .create(buildOrderRecord(lines, checkout, totals))
+      .catch(() => undefined)
     const url = whatsappUrl(whatsapp, buildOrderMessage(lines, checkout, totals))
     const win = window.open(url, '_blank')
     if (!win) window.location.href = url // popup bloqueado (comum em in-app browsers)
@@ -207,6 +214,15 @@ export function CartDrawer() {
             onChange={(tipo) => setCheckout({ tipo })}
           />
 
+          {paused && (
+            <p
+              role="alert"
+              className="rounded-xl border border-ember/40 bg-ember/10 px-4 py-3 text-sm text-ember"
+            >
+              {pauseMessage}
+            </p>
+          )}
+
           <div>
             <label htmlFor="ck-nome" className="label">
               Seu nome
@@ -226,6 +242,22 @@ export function CartDrawer() {
                 {errors.nome}
               </p>
             )}
+          </div>
+
+          <div>
+            <label htmlFor="ck-tel" className="label">
+              WhatsApp para contato (opcional)
+            </label>
+            <input
+              id="ck-tel"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              className="input"
+              placeholder="(67) 90000-0000"
+              value={checkout.telefone}
+              onChange={(e) => setCheckout({ telefone: e.target.value })}
+            />
           </div>
 
           {checkout.tipo === 'entrega' && (
@@ -256,7 +288,7 @@ export function CartDrawer() {
           <Segmented
             name="pagamento"
             legend="Forma de pagamento"
-            options={PAYMENTS.map((p) => ({ value: p, label: p }))}
+            options={payments.map((p) => ({ value: p, label: p }))}
             value={checkout.pagamento}
             onChange={(pagamento) => setCheckout({ pagamento })}
           />
@@ -309,7 +341,7 @@ export function CartDrawer() {
               {errors.carrinho}
             </p>
           )}
-          <Button type="submit" variant="whatsapp" className="w-full">
+          <Button type="submit" variant="whatsapp" className="w-full" disabled={paused}>
             <WhatsappIcon size={20} /> Finalizar pelo WhatsApp
           </Button>
         </form>

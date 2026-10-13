@@ -1,4 +1,9 @@
-import type { DeliveryFee, StoreSettings, WeekHours } from './types.ts'
+import {
+  PAYMENT_METHODS,
+  type DeliveryFee,
+  type StoreSettings,
+  type WeekHours,
+} from './types.ts'
 
 /**
  * Fonte única dos dados da loja. Tudo que estiver marcado com "EDITAR" é placeholder.
@@ -60,6 +65,9 @@ export const config = {
   deliveryFee: defaultDeliveryFee,
   notice: '', // aviso de topo, ex.: "Hoje fechamos às 23h"
 
+  /** Acesso do painel quando o Supabase NÃO está configurado (dados ficam só neste navegador). */
+  demo: { email: 'demo@moria.com', password: 'moria123' },
+
   messages: {
     orderTitle: '*Novo pedido - Moriá Hamburgueria*',
     headerWhatsapp:
@@ -74,6 +82,11 @@ export const defaultSettings: StoreSettings = {
   hours: config.hours,
   deliveryFee: config.deliveryFee,
   notice: config.notice,
+  paused: false,
+  pauseMessage:
+    'Estamos com a cozinha lotada no momento. Tente novamente em alguns minutos.',
+  payments: [...PAYMENT_METHODS],
+  minOrder: 0,
 }
 
 export const DAY_NAMES = [

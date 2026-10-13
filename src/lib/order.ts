@@ -2,7 +2,7 @@ import { config } from './config'
 import { formatPrice } from './format'
 import type { CartLine, Checkout } from '@/store/cart'
 import { lineTotal, unitPrice } from '@/store/cart'
-import type { DeliveryFee } from './types'
+import type { DeliveryFee, NewOrder } from './types'
 
 export interface Totals {
   subtotal: number
@@ -22,11 +22,21 @@ export function computeTotals(
   return { subtotal, delivery, total: subtotal + (delivery ?? 0) }
 }
 
-export type CheckoutErrors = Partial<Record<'carrinho' | 'nome' | 'endereco', string>>
+export type CheckoutErrors = Partial<
+  Record<'carrinho' | 'nome' | 'endereco' | 'minimo', string>
+>
 
-export function validateCheckout(lines: CartLine[], checkout: Checkout): CheckoutErrors {
+export function validateCheckout(
+  lines: CartLine[],
+  checkout: Checkout,
+  minOrder = 0,
+): CheckoutErrors {
   const errors: CheckoutErrors = {}
   if (lines.length === 0) errors.carrinho = config.messages.emptyCart
+  const subtotal = lines.reduce((n, l) => n + lineTotal(l), 0)
+  if (lines.length > 0 && subtotal < minOrder) {
+    errors.minimo = `Pedido mínimo de ${formatPrice(minOrder)} (faltam ${formatPrice(minOrder - subtotal)}).`
+  }
   if (checkout.nome.trim().length < 2) errors.nome = 'Informe seu nome.'
   if (checkout.tipo === 'entrega' && checkout.endereco.trim().length < 5) {
     errors.endereco = 'Informe o endereço completo para entrega.'
@@ -75,10 +85,37 @@ export function buildOrderMessage(
     `*Total: ${totalText}*`,
     '',
     `Nome: ${checkout.nome.trim()}`,
+    ...(checkout.telefone.trim() ? [`Contato: ${checkout.telefone.trim()}`] : []),
     `Tipo: ${checkout.tipo === 'entrega' ? 'Entrega' : 'Retirada'}`,
     ...(checkout.tipo === 'entrega' ? [`Endereço: ${checkout.endereco.trim()}`] : []),
     `Pagamento: ${payment}`,
   ]
     .join('\n')
     .replace(/\u00a0/g, ' ') // Intl usa espaço não separável após "R$"
+}
+
+export function buildOrderRecord(
+  lines: CartLine[],
+  checkout: Checkout,
+  totals: Totals,
+): NewOrder {
+  return {
+    tipo: checkout.tipo,
+    cliente_nome: checkout.nome.trim(),
+    cliente_telefone: checkout.telefone.trim(),
+    endereco: checkout.tipo === 'entrega' ? checkout.endereco.trim() : '',
+    pagamento: checkout.pagamento,
+    troco: checkout.pagamento === 'Dinheiro' ? checkout.troco.trim() : '',
+    obs: checkout.obs.trim(),
+    itens: lines.map((l) => ({
+      nome: l.nome,
+      qtd: l.qtd,
+      preco: unitPrice(l),
+      adicionais: l.adicionais.map((a) => a.nome),
+      obs: l.obs.trim(),
+    })),
+    subtotal: totals.subtotal,
+    entrega: totals.delivery,
+    total: totals.total,
+  }
 }

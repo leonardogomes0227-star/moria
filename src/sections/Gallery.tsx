@@ -3,9 +3,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronIcon, CloseIcon } from '@/components/Icons'
 import { Reveal } from '@/components/Reveal'
 import { Section } from '@/components/Section'
-import { gallery } from '@/data/gallery'
+import { gallery as seed } from '@/data/gallery'
+import { useRemoteList } from '@/hooks/useRemoteList'
+import { fetchGallery } from '@/lib/api'
 
 export function Gallery() {
+  const gallery = useRemoteList(seed, fetchGallery)
   const [active, setActive] = useState<number | null>(null)
   const lastFocus = useRef<HTMLElement | null>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -14,9 +17,12 @@ export function Gallery() {
     setActive(null)
     lastFocus.current?.focus()
   }, [])
-  const step = useCallback((d: number) => {
-    setActive((i) => (i === null ? i : (i + d + gallery.length) % gallery.length))
-  }, [])
+  const step = useCallback(
+    (d: number) => {
+      setActive((i) => (i === null ? i : (i + d + gallery.length) % gallery.length))
+    },
+    [gallery.length],
+  )
 
   useEffect(() => {
     if (active === null) return

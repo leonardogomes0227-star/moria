@@ -38,15 +38,55 @@ export type WeekHours = (DayHours | null)[] // índice 0 = domingo
 
 export type DeliveryFee = { mode: 'fixed'; amount: number } | { mode: 'tbd' }
 
+export type OrderType = 'entrega' | 'retirada'
+export type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro'
+
+export const PAYMENT_METHODS: readonly PaymentMethod[] = ['Pix', 'Cartão', 'Dinheiro']
+
 export interface StoreSettings {
   whatsapp: string
   hours: WeekHours
   deliveryFee: DeliveryFee
   notice: string
+  /** Pausa os pedidos pelo site (ex.: cozinha lotada), independente do horário. */
+  paused: boolean
+  pauseMessage: string
+  payments: PaymentMethod[]
+  /** Valor mínimo do subtotal para fechar o pedido (0 = sem mínimo). */
+  minOrder: number
 }
 
-export type OrderType = 'entrega' | 'retirada'
-export type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro'
+export type OrderStatus = 'novo' | 'preparo' | 'entrega' | 'concluido' | 'cancelado'
+
+export interface OrderLine {
+  nome: string
+  qtd: number
+  /** Preço unitário já com os adicionais. */
+  preco: number
+  adicionais: string[]
+  obs: string
+}
+
+export interface Order {
+  id: string
+  numero: number
+  criado_em: string
+  status: OrderStatus
+  tipo: OrderType
+  cliente_nome: string
+  cliente_telefone: string
+  endereco: string
+  pagamento: PaymentMethod
+  troco: string
+  obs: string
+  itens: OrderLine[]
+  subtotal: number
+  /** `null` = taxa a combinar. */
+  entrega: number | null
+  total: number
+}
+
+export type NewOrder = Omit<Order, 'id' | 'numero' | 'criado_em' | 'status'>
 
 export interface Review {
   id: string

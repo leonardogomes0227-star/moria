@@ -3,7 +3,7 @@ import { Button } from '@/components/Button'
 import { Dialog } from '@/components/Dialog'
 import { PlusIcon, TrashIcon } from '@/components/Icons'
 import { MenuImage } from '@/components/MenuImage'
-import { uploadImage, type MenuDraft } from '@/lib/adminApi'
+import { repo, type MenuDraft } from '@/lib/data'
 import { CATEGORIES, type Addon, type Category, type MenuItem } from '@/lib/types'
 
 interface ItemEditorProps {
@@ -55,7 +55,7 @@ function EditorForm({
     setBusy(true)
     setError('')
     try {
-      set('imagem', await uploadImage(file))
+      set('imagem', await repo.uploadImage(file))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha no upload.')
     } finally {

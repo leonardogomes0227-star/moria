@@ -133,3 +133,54 @@ export const CheckIcon = (p: IconProps) => (
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </Svg>
 )
+export const HomeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" />
+  </Svg>
+)
+export const ReceiptIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" />
+  </Svg>
+)
+export const BurgerIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 11a8 6 0 0 1 16 0z" />
+    <path d="M3 14h18M5 17h14a0 0 0 0 1 0 0 2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+  </Svg>
+)
+export const SettingsIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.7a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.7a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z" />
+  </Svg>
+)
+export const ImageIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+    <circle cx="9" cy="10" r="1.6" />
+    <path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5" />
+  </Svg>
+)
+export const HelpIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.8M12 17h.01" />
+  </Svg>
+)
+export const PrinterIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 9V4h10v5M7 17H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 17h-2M7 14h10v6H7z" />
+  </Svg>
+)
+export const CopyIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+    <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
+  </Svg>
+)
+export const BellIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" />
+  </Svg>
+)

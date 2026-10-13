@@ -2,19 +2,24 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronIcon, StarIcon } from '@/components/Icons'
 import { Section } from '@/components/Section'
-import { reviews } from '@/data/reviews'
+import { reviews as seed } from '@/data/reviews'
+import { useRemoteList } from '@/hooks/useRemoteList'
+import { fetchReviews } from '@/lib/api'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
 
 const SWIPE = 60
 
 export function Reviews() {
+  const reviews = useRemoteList(seed, fetchReviews)
   const [[index, dir], setPage] = useState<[number, number]>([0, 0])
   const [paused, setPaused] = useState(false)
   const reduced = usePrefersReducedMotion()
 
-  const go = useCallback((delta: number) => {
-    setPage(([i]) => [(i + delta + reviews.length) % reviews.length, delta])
-  }, [])
+  const total = Math.max(reviews.length, 1)
+  const go = useCallback(
+    (delta: number) => setPage(([i]) => [(i + delta + total) % total, delta]),
+    [total],
+  )
 
   useEffect(() => {
     if (paused || reduced) return
@@ -22,7 +27,8 @@ export function Reviews() {
     return () => window.clearInterval(id)
   }, [paused, reduced, go])
 
-  const review = reviews[index]
+  const review = reviews[index] ?? reviews[0]
+  if (!review) return null
 
   return (
     <Section
