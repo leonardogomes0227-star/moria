@@ -45,21 +45,39 @@ O logo real da Moriá está em `src/assets/logo.png` (o componente `<Logo />` o 
 
 O hero mostra a foto real por padrão. Para usar a cena Three.js, defina `hero.mode: '3d'` em `config.ts`: ela exibe um hambúrguer procedural ou, se existir **`public/models/burger.glb`**, o seu modelo (cada filho direto da cena do `.glb` vira uma camada na "explosão" por scroll). A cena só carrega após a primeira interação (ou ~4 s), pausa fora da viewport, limita o DPR a 1.5 e cai para um SVG em dispositivos fracos, com economia de dados, sem WebGL ou com `prefers-reduced-motion`.
 
-## Supabase (cardápio editável + painel `/admin`) — opcional
+## Painel administrativo (`/admin`)
+
+Telas do painel (todas com textos explicativos em português):
+
+| Tela                 | Para quê                                                                                                                                                                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Início**           | Resumo do dia: pedidos, faturamento, ticket médio, vendas dos últimos 7 dias, mais vendidos e o botão **Receber pedidos pelo site** (pausa rápida).                                                                                          |
+| **Pedidos**          | Lista os pedidos feitos pelo site. Fluxo: _Novo → Em preparo → Saiu para entrega / Pronto para retirada → Concluído_ (ou Cancelado). Atualiza sozinha a cada 15 s, avisa com bipe, **imprime comanda** (80 mm) e abre o WhatsApp do cliente. |
+| **Cardápio**         | Criar, editar, duplicar, excluir, ordenar, ativar/desativar disponibilidade, marcar “mais pedido”, trocar categoria, adicionais e foto.                                                                                                      |
+| **Loja**             | Pausar pedidos, aviso de topo, horários, WhatsApp, taxa de entrega, pedido mínimo e formas de pagamento aceitas.                                                                                                                             |
+| **Conteúdo do site** | Depoimentos e fotos da galeria.                                                                                                                                                                                                              |
+| **Ajuda**            | Passo a passo do dia a dia e perguntas frequentes.                                                                                                                                                                                           |
+
+### Modo demonstração (sem configurar nada)
+
+Sem as variáveis do Supabase, o painel funciona em **modo demonstração**: tudo é salvo no `localStorage` do navegador, com pedidos de exemplo para o dashboard não nascer vazio. Login: **`demo@moria.com`** / **`moria123`** (definido em `config.demo`). Faça um pedido no site e ele aparece em _Pedidos_; mude um preço e o site muda. “Ajuda → Restaurar dados de demonstração” volta ao início. Os dados **não** vão para outros aparelhos: para produção, use o Supabase abaixo.
+
+## Supabase (produção) — opcional
 
 1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
-2. No **SQL Editor**, cole e execute `supabase/schema.sql`. Ele cria as tabelas `menu_items` e `store_settings`, as policies RLS (leitura pública, escrita só para usuário autenticado) e o bucket público `menu-images` com suas policies.
-3. Em **Authentication → Users → Add user**, crie o usuário do dono (e-mail e senha). Em **Authentication → Sign In / Providers**, **desative "Allow new users to sign up"**, pois qualquer usuário autenticado pode editar o cardápio.
+2. No **SQL Editor**, cole e execute `supabase/schema.sql` (pode rodar de novo sem problemas). Ele cria as tabelas `menu_items`, `store_settings`, `orders`, `reviews` e `gallery_photos`, as policies RLS e o bucket público `menu-images`.
+   - Cardápio, depoimentos e galeria: leitura pública, escrita só autenticado.
+   - Pedidos: o **site só consegue criar** um pedido novo; ler, alterar e excluir é só do painel.
+3. Em **Authentication → Users → Add user**, crie o usuário do dono (e-mail e senha). Em **Authentication → Sign In / Providers**, **desative "Allow new users to sign up"**: qualquer usuário autenticado acessa o painel.
 4. Em **Project Settings → API**, copie a _Project URL_ e a chave _anon public_.
 5. Copie `.env.example` para `.env` e preencha:
    ```
    VITE_SUPABASE_URL=https://xxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
-6. Rode `npm run dev`, abra `/admin`, entre e use **"Importar cardápio de exemplo"** se quiser partir do seed.
+6. Rode `npm run dev`, abra `/admin`, entre e use os botões **“Importar …”** (cardápio, depoimentos, galeria) se quiser partir dos exemplos.
 
-No painel é possível: criar/editar/excluir itens, ativar/desativar disponibilidade, marcar "Mais pedido", reordenar (setas), trocar categoria, enviar foto e editar horários, WhatsApp, taxa de entrega e o aviso de topo.
-Se as variáveis não existirem — ou se a rede/Supabase falhar —, o site continua com `src/data/menu.ts` e `config.ts`.
+Se o Supabase falhar ou não responder, o site continua com `src/data/*` e `config.ts` — e o pedido segue pelo WhatsApp mesmo que o registro no painel falhe.
 
 ## Deploy na Vercel
 
@@ -86,6 +104,6 @@ supabase/schema.sql
 
 ## Qualidade
 
-- Lighthouse mobile (build de produção, emulação padrão): Performance ≈ 90, Acessibilidade 100, Boas práticas 100, SEO 100.
+- Lighthouse mobile (build de produção, emulação padrão, rede/CPU simuladas): Performance 87–90, Acessibilidade 100, Boas práticas 100, SEO 100.
 - Responsivo de 320 a 1920 px (sem rolagem horizontal), foco visível, navegação por teclado, `prefers-reduced-motion` respeitado.
 - O status "Aberto agora / Fechado" é calculado no fuso `America/Campo_Grande`, inclusive para expedientes que viram a madrugada.
