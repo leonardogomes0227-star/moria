@@ -1,0 +1,41 @@
+import { motion } from 'framer-motion'
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
+
+type Variant = 'primary' | 'ghost' | 'whatsapp'
+
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-pill px-6 py-3 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+
+const variants: Record<Variant, string> = {
+  primary: 'bg-brand text-white shadow-glow hover:bg-brand-light',
+  ghost:
+    'border border-white/20 bg-white/5 text-white hover:border-ember hover:bg-white/10',
+  whatsapp: 'bg-[#1FA855] text-white hover:bg-[#25C063]',
+}
+
+type CommonProps = { variant?: Variant; children: ReactNode; className?: string }
+type AnchorProps = CommonProps &
+  AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }
+type NativeButtonProps = CommonProps &
+  ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined }
+
+const tap = { whileTap: { scale: 0.96 }, whileHover: { y: -2 } }
+
+export function Button(props: AnchorProps | NativeButtonProps) {
+  const { variant = 'primary', className = '', children, ...rest } = props
+  const cls = `${base} ${variants[variant]} ${className}`
+  if (props.href !== undefined) {
+    const { href, ...anchor } = rest as AnchorHTMLAttributes<HTMLAnchorElement>
+    return (
+      <motion.a {...tap} href={href} className={cls} {...(anchor as object)}>
+        {children}
+      </motion.a>
+    )
+  }
+  const { type = 'button', ...btn } = rest as ButtonHTMLAttributes<HTMLButtonElement>
+  return (
+    <motion.button {...tap} type={type} className={cls} {...(btn as object)}>
+      {children}
+    </motion.button>
+  )
+}

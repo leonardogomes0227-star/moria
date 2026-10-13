@@ -1,0 +1,81 @@
+import type { DeliveryFee, StoreSettings, WeekHours } from './types.ts'
+
+/**
+ * Fonte única dos dados da loja. Tudo que estiver marcado com "EDITAR" é placeholder.
+ * Este arquivo é importado também pelo vite.config.ts (SEO estático), então não use
+ * APIs de navegador nem import.meta.env aqui.
+ */
+
+const defaultHours: WeekHours = [
+  { open: '18:00', close: '23:00' }, // domingo      — EDITAR
+  null, //                              segunda      — EDITAR (fechado)
+  { open: '18:00', close: '23:00' }, // terça        — EDITAR
+  { open: '18:00', close: '23:00' }, // quarta       — EDITAR
+  { open: '18:00', close: '23:00' }, // quinta       — EDITAR
+  { open: '18:00', close: '00:00' }, // sexta        — EDITAR
+  { open: '18:00', close: '00:00' }, // sábado       — EDITAR
+]
+
+const defaultDeliveryFee: DeliveryFee = { mode: 'fixed', amount: 5 } // EDITAR (ou { mode: 'tbd' })
+
+export const config = {
+  name: 'Moriá Hamburgueria',
+  shortName: 'Moriá',
+  slogan: 'O autêntico sabor defumado em Rio Verde de MS',
+  description:
+    'Hambúrguer artesanal defumado em Rio Verde de Mato Grosso (MS). Baguetes exclusivas, molho artesanal e carnes selecionadas. Peça direto pelo WhatsApp.',
+  siteUrl: 'https://moria-hamburgueria.vercel.app', // EDITAR: domínio final
+  timezone: 'America/Campo_Grande',
+  currency: 'BRL',
+
+  whatsapp: '5567999999999', // EDITAR: formato 55 + DDD + número
+  instagram: {
+    handle: 'moria_hamburgueria',
+    url: 'https://instagram.com/moria_hamburgueria',
+  },
+  credit: { label: 'STCK.Labs', url: 'https://instagram.com/stck.labs' },
+
+  address: {
+    street: 'Rua Exemplo, 000 (EDITAR)',
+    district: 'Centro (EDITAR)',
+    city: 'Rio Verde de Mato Grosso',
+    state: 'MS',
+    zip: '79480-000', // EDITAR
+  },
+  /** Link "Como chegar" — EDITAR com o link real do Google Maps. */
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rio+Verde+de+Mato+Grosso+MS',
+  /** URL do iframe (modo embed sem chave). EDITAR com o endereço real. */
+  mapsEmbedUrl: 'https://www.google.com/maps?q=Rio+Verde+de+Mato+Grosso+MS&output=embed',
+
+  hours: defaultHours,
+  deliveryFee: defaultDeliveryFee,
+  notice: '', // aviso de topo, ex.: "Hoje fechamos às 23h"
+
+  messages: {
+    orderTitle: '*Novo pedido - Moriá Hamburgueria*',
+    headerWhatsapp:
+      'Olá! Vim pelo site da Moriá Hamburgueria e gostaria de fazer um pedido.',
+    emptyCart: 'Seu carrinho está vazio. Escolha algo no cardápio!',
+    deliveryTbd: 'a combinar',
+  },
+} as const
+
+export const defaultSettings: StoreSettings = {
+  whatsapp: config.whatsapp,
+  hours: config.hours,
+  deliveryFee: config.deliveryFee,
+  notice: config.notice,
+}
+
+export const DAY_NAMES = [
+  'Domingo',
+  'Segunda',
+  'Terça',
+  'Quarta',
+  'Quinta',
+  'Sexta',
+  'Sábado',
+] as const
+
+export const fullAddress = (): string =>
+  `${config.address.street} - ${config.address.district}, ${config.address.city}/${config.address.state}`
