@@ -10,7 +10,7 @@ export function seoPlugin(): Plugin {
     SEO_DESCRIPTION: config.description,
     SEO_URL: config.siteUrl,
     SEO_NAME: config.name,
-    SEO_PRELOAD: `<link rel="preload" as="image" href="${config.hero.image}" fetchpriority="high" />`,
+    SEO_PRELOAD: `<link rel="preload" as="image" href="${config.hero.image}" imagesrcset="${config.hero.imageSmall} ${config.hero.smallWidth}w, ${config.hero.image} ${config.hero.width}w" imagesizes="(min-width: 1024px) 560px, 100vw" fetchpriority="high" />`,
   }
   return {
     name: 'moria-seo',

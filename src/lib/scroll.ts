@@ -1,4 +1,4 @@
-import Lenis from 'lenis'
+import type Lenis from 'lenis'
 
 let instance: Lenis | null = null
 

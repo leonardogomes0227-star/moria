@@ -1,5 +1,6 @@
 import { CartBar } from '@/components/CartBar'
 import { CartDrawer } from '@/components/CartDrawer'
+import { Toaster } from '@/components/Toaster'
 import { Footer } from '@/sections/Footer'
 
 export default function Overlays() {
@@ -8,6 +9,7 @@ export default function Overlays() {
       <Footer />
       <CartBar />
       <CartDrawer />
+      <Toaster />
     </>
   )
 }

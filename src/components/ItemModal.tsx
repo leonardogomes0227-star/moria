@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { formatPrice } from '@/lib/format'
 import type { MenuItem } from '@/lib/types'
-import { useCart } from '@/store/cart'
+import { addToCart } from '@/lib/cartActions'
 import { Button } from './Button'
 import { Dialog } from './Dialog'
 import { MenuImage } from './MenuImage'
@@ -13,7 +13,6 @@ interface ItemModalProps {
 }
 
 function ItemForm({ item, onClose }: { item: MenuItem; onClose: () => void }) {
-  const add = useCart((s) => s.add)
   const [selected, setSelected] = useState<string[]>([])
   const [qtd, setQtd] = useState(1)
   const [obs, setObs] = useState('')
@@ -22,7 +21,7 @@ function ItemForm({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   const unit = item.preco + addons.reduce((n, a) => n + a.preco, 0)
 
   const submit = () => {
-    add({
+    addToCart({
       itemId: item.id,
       nome: item.nome,
       preco: item.preco,

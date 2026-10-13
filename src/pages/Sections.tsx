@@ -5,6 +5,7 @@ import type { MenuItem } from '@/lib/types'
 import { Favorites } from '@/sections/Favorites'
 import { Gallery } from '@/sections/Gallery'
 import { Highlights } from '@/sections/Highlights'
+import { InstagramCta } from '@/sections/InstagramCta'
 import { Hours } from '@/sections/Hours'
 import { HowItWorks } from '@/sections/HowItWorks'
 import { Location } from '@/sections/Location'
@@ -27,6 +28,7 @@ export default function Sections() {
       <Hours />
       <Reviews />
       <Gallery />
+      <InstagramCta />
       <Location />
       <ItemModal item={selected} onClose={() => setSelected(null)} />
     </>

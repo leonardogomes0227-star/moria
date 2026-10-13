@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { BreadIcon, MeatIcon, SauceIcon } from '@/components/Icons'
 import { Reveal } from '@/components/Reveal'
 import { Section } from '@/components/Section'
+import { SpotlightCard } from '@/components/SpotlightCard'
 
 const items: { title: string; text: string; icon: ReactNode }[] = [
   {
@@ -33,16 +33,13 @@ export function Highlights() {
         {items.map((it, i) => (
           <li key={it.title}>
             <Reveal delay={i * 0.1} className="h-full">
-              <motion.article
-                whileHover={{ y: -6 }}
-                className="card group h-full p-7 transition-shadow duration-300 hover:border-brand/60 hover:shadow-glow"
-              >
-                <span className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow-ember">
+              <SpotlightCard className="card h-full p-7 transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/60 hover:shadow-glow">
+                <span className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow-ember transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
                   {it.icon}
                 </span>
                 <h3 className="text-2xl">{it.title}</h3>
                 <p className="mt-2 text-muted">{it.text}</p>
-              </motion.article>
+              </SpotlightCard>
             </Reveal>
           </li>
         ))}

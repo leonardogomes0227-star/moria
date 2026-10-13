@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { Marquee } from '@/components/Marquee'
+import { ScrollProgress } from '@/components/ScrollProgress'
 import { Hero } from '@/sections/Hero'
 
 const Sections = lazy(() => import('./Sections'))
@@ -15,6 +16,7 @@ export default function Home() {
       >
         Pular para o conteúdo
       </a>
+      <ScrollProgress />
       <Header />
       <main id="conteudo">
         <Hero />

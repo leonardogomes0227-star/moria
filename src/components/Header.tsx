@@ -19,12 +19,22 @@ const links = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [active, setActive] = useState('')
   const count = useCart(selectCount)
   const setCartOpen = useCart((s) => s.setOpen)
   const { notice, whatsapp } = useSettings((s) => s.settings)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24)
+      // Seção atual: a última cujo topo já passou da altura do header.
+      let current = ''
+      for (const l of links) {
+        const el = document.getElementById(l.id)
+        if (el && el.getBoundingClientRect().top <= 140) current = l.id
+      }
+      setActive(current)
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -73,15 +83,25 @@ export function Header() {
                   e.preventDefault()
                   go(l.id)
                 }}
-                className="text-sm font-medium text-white/80 transition-colors hover:text-ember"
+                aria-current={active === l.id ? 'true' : undefined}
+                className={`relative py-1 text-sm font-medium transition-colors hover:text-ember ${
+                  active === l.id ? 'text-ember' : 'text-white/80'
+                }`}
               >
                 {l.label}
+                {active === l.id && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-brand-gradient"
+                  />
+                )}
               </a>
             ))}
           </nav>
 
           <div className="flex items-center gap-2">
             <button
+              id="cart-button"
               type="button"
               onClick={() => setCartOpen(true)}
               aria-label={`Abrir carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`}

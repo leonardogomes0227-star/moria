@@ -1,3 +1,5 @@
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { useRef } from 'react'
 import { Button } from '@/components/Button'
 import { WhatsappIcon } from '@/components/Icons'
 import { Reveal } from '@/components/Reveal'
@@ -9,12 +11,22 @@ import { useSettings } from '@/store/settings'
 /** Banner de chamada para o pedido, com a foto do hero como fundo. */
 export function Promo() {
   const whatsapp = useSettings((s) => s.settings.whatsapp)
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  })
+  const imgY = useTransform(scrollYProgress, [0, 1], ['-8%', '8%'])
   return (
     <section aria-labelledby="promo-title" className="py-10">
       <div className="container-x">
         <Reveal>
-          <div className="relative isolate overflow-hidden rounded-[2rem] border border-brand/40 bg-surface shadow-glow">
-            <img
+          <div
+            ref={ref}
+            className="relative isolate overflow-hidden rounded-[2rem] border border-brand/40 bg-surface shadow-glow"
+          >
+            <motion.img
+              style={{ y: imgY }}
               src={config.hero.image}
               alt=""
               width={config.hero.width}

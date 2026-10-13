@@ -56,6 +56,8 @@ export const config = {
   hero: {
     mode: 'photo' as 'photo' | '3d',
     image: '/hero/burger.webp',
+    imageSmall: '/hero/burger-640.webp',
+    smallWidth: 640,
     width: 940,
     height: 652,
     alt: 'Hambúrguer artesanal duplo com queijo cheddar derretido, segurado com as mãos',

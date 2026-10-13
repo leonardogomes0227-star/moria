@@ -67,12 +67,17 @@ export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
                     setQuery('')
                     setCategory(c)
                   }}
-                  className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition-colors ${
-                    active
-                      ? 'bg-brand text-white shadow-glow'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10'
+                  className={`relative isolate shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition-colors ${
+                    active ? 'text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'
                   }`}
                 >
+                  {active && (
+                    <motion.span
+                      layoutId="chip-active"
+                      className="absolute inset-0 -z-10 rounded-pill bg-brand shadow-glow"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
+                  )}
                   {c}
                 </button>
               )

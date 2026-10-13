@@ -34,6 +34,26 @@ export default {
           '15%': { opacity: '0.9' },
           '100%': { transform: 'translateY(-110vh) scale(0.4)', opacity: '0' },
         },
+        shimmer: {
+          '0%': { backgroundPosition: '0% center' },
+          '100%': { backgroundPosition: '200% center' },
+        },
+        fadeUp: {
+          from: { opacity: '0', transform: 'translateY(22px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+        drift: {
+          '0%,100%': { transform: 'translate3d(0,0,0) scale(1)' },
+          '50%': { transform: 'translate3d(40px,-30px,0) scale(1.15)' },
+        },
+        ping2: {
+          '0%': { transform: 'scale(1)', opacity: '0.7' },
+          '80%,100%': { transform: 'scale(2.4)', opacity: '0' },
+        },
+        float: {
+          '0%,100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
@@ -48,6 +68,11 @@ export default {
         'pulse-glow': 'pulseGlow 2.8s ease-in-out infinite',
         'spin-slow': 'spin 22s linear infinite',
         marquee: 'marquee 28s linear infinite',
+        shimmer: 'shimmer 4s linear infinite',
+        'fade-up': 'fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) both',
+        drift: 'drift 14s ease-in-out infinite',
+        ping2: 'ping2 2s cubic-bezier(0,0,0.2,1) infinite',
+        float: 'float 5s ease-in-out infinite',
       },
     },
   },

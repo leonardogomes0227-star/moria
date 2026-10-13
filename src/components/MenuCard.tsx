@@ -1,9 +1,9 @@
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { useState, type PointerEvent } from 'react'
+import { useState, type MouseEvent, type PointerEvent } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
 import { formatPrice } from '@/lib/format'
 import type { MenuItem } from '@/lib/types'
-import { useCart } from '@/store/cart'
+import { addToCart } from '@/lib/cartActions'
 import { CheckIcon, PlusIcon } from './Icons'
 import { MenuImage } from './MenuImage'
 
@@ -14,7 +14,6 @@ interface MenuCardProps {
 }
 
 export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
-  const add = useCart((s) => s.add)
   const reduced = usePrefersReducedMotion()
   const [added, setAdded] = useState(false)
 
@@ -41,16 +40,19 @@ export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
     py.set(0)
   }
 
-  const handleAdd = () => {
+  const handleAdd = (e: MouseEvent<HTMLButtonElement>) => {
     if (item.adicionais.length > 0) return onOpen(item)
-    add({
-      itemId: item.id,
-      nome: item.nome,
-      preco: item.preco,
-      adicionais: [],
-      qtd: 1,
-      obs: '',
-    })
+    addToCart(
+      {
+        itemId: item.id,
+        nome: item.nome,
+        preco: item.preco,
+        adicionais: [],
+        qtd: 1,
+        obs: '',
+      },
+      e.currentTarget,
+    )
     setAdded(true)
     window.setTimeout(() => setAdded(false), 1400)
   }

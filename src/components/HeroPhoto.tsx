@@ -1,11 +1,60 @@
 import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion'
-import { useEffect, type PointerEvent } from 'react'
+import { useEffect, useState, type PointerEvent } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
 import { config } from '@/lib/config'
 import { FlameIcon } from './Icons'
 import { OpenBadge } from './OpenBadge'
 
+/** Pontos interativos sobre a foto (posições em % da imagem). Só descrevem o que a foto mostra. */
+const HOTSPOTS = [
+  { id: 'pao', label: 'Pão macio com gergelim', x: 40, y: 9, side: 'right' },
+  { id: 'cheddar', label: 'Cheddar derretido', x: 64, y: 33, side: 'left' },
+  { id: 'blend', label: 'Blend suculento na brasa', x: 38, y: 52, side: 'right' },
+  { id: 'cebola', label: 'Cebola roxa e picles', x: 52, y: 66, side: 'left' },
+] as const
+
 const SEAL_TEXT = 'DEFUMADO NA BRASA • ARTESANAL • '
+
+function Hotspots() {
+  const [active, setActive] = useState<string | null>(null)
+  return (
+    <>
+      {HOTSPOTS.map((h) => {
+        const open = active === h.id
+        return (
+          <div
+            key={h.id}
+            className="absolute"
+            style={{ left: `${h.x}%`, top: `${h.y}%` }}
+          >
+            <button
+              type="button"
+              aria-label={h.label}
+              aria-expanded={open}
+              onClick={() => setActive(open ? null : h.id)}
+              onPointerEnter={(e) => e.pointerType === 'mouse' && setActive(h.id)}
+              onPointerLeave={(e) => e.pointerType === 'mouse' && setActive(null)}
+              onFocus={() => setActive(h.id)}
+              onBlur={() => setActive(null)}
+              className="relative grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center"
+            >
+              <span className="absolute h-4 w-4 animate-ping2 rounded-full bg-white/70" />
+              <span className="relative h-3.5 w-3.5 rounded-full border-2 border-white bg-brand shadow-glow" />
+            </button>
+            <span
+              role="status"
+              className={`pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-pill border border-line bg-bg/90 px-3 py-1 text-xs font-semibold shadow-card backdrop-blur transition-all duration-200 ${
+                h.side === 'right' ? 'left-5 origin-left' : 'right-5 origin-right'
+              } ${open ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}
+            >
+              {open ? h.label : ''}
+            </span>
+          </div>
+        )
+      })}
+    </>
+  )
+}
 
 function Seal() {
   return (
@@ -55,7 +104,7 @@ export function HeroPhoto() {
     my.set(0)
   }
 
-  const { image, width, height, alt } = config.hero
+  const { image, imageSmall, smallWidth, width, height, alt } = config.hero
 
   return (
     <div
@@ -69,16 +118,20 @@ export function HeroPhoto() {
         className="absolute inset-0 bg-[radial-gradient(closest-side,rgba(214,31,31,0.45),transparent)]"
       />
       <motion.div style={{ x, y: scrollShift }} className="absolute inset-0">
-        <motion.img
-          src={image}
-          alt={alt}
-          width={width}
-          height={height}
-          fetchPriority="high"
-          decoding="async"
-          style={{ y }}
-          className="h-full w-full select-none object-cover"
-        />
+        <motion.div style={{ y }} className="absolute inset-0">
+          <img
+            src={image}
+            srcSet={`${imageSmall} ${smallWidth}w, ${image} ${width}w`}
+            sizes="(min-width: 1024px) 560px, 100vw"
+            alt={alt}
+            width={width}
+            height={height}
+            fetchPriority="high"
+            decoding="async"
+            className="h-full w-full select-none object-cover"
+          />
+          <Hotspots />
+        </motion.div>
       </motion.div>
       <Seal />
       <div className="absolute bottom-[6%] left-[4%] sm:left-[8%]">
