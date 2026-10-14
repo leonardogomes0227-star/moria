@@ -11,6 +11,9 @@ export const env = {
   transcribeKey: () => process.env.TRANSCRIBE_API_KEY ?? '',
   transcribeUrl: () => process.env.TRANSCRIBE_URL ?? 'https://api.openai.com/v1/audio/transcriptions',
   transcribeModel: () => process.env.TRANSCRIBE_MODEL ?? 'whisper-1',
+  cronSecret: () => process.env.CRON_SECRET ?? '',
+  /** Modelo aprovado na Meta para o resumo diário (opcional; permite mandar fora da janela de 24 h). */
+  summaryTemplate: () => process.env.WHATSAPP_SUMMARY_TEMPLATE ?? '',
   graphVersion: () => process.env.WHATSAPP_GRAPH_VERSION ?? 'v21.0',
   storeName: () => process.env.STORE_NAME ?? 'Moriá Hamburgueria',
   storeAddress: () => process.env.STORE_ADDRESS ?? 'Rio Verde de Mato Grosso/MS',

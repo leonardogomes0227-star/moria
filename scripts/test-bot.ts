@@ -87,6 +87,13 @@ const goodOrder = {
   assert.ok(a.includes('[h8] Clássico Moriá — R$ 28,00'))
   assert.ok(!/\d{2}:\d{2}/.test(a.split('CARDÁPIO')[0].replace(/\d{2}:\d{2}/g, '')) || true)
   assert.ok(a.includes('Pedido mínimo: sem mínimo'))
+  assert.ok(!a.includes('ITENS QUE A CASA MAIS GOSTA DE VENDER'))
+  const withProfit = buildSystemPrompt(info({ topProfit: ['Monte Moriá', 'Bacon Supremo 2.0'] }))
+  assert.ok(withProfit.includes('ITENS QUE A CASA MAIS GOSTA DE VENDER\n- Monte Moriá, Bacon Supremo 2.0.'))
+  assert.ok(withProfit.includes('nunca fale de lucro ou custo com o cliente'))
+  // a loja de demonstração calcula esse ranking com as fichas técnicas de exemplo
+  const demo = await createStaticStore().loadStore()
+  assert.equal(demo.topProfit?.length, 5)
   console.log('✓ prompt estável e com cardápio')
 }
 

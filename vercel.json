@@ -1,6 +1,19 @@
 {
-  "functions": { "api/*.ts": { "maxDuration": 60 } },
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
-    { "source": "/((?!api/|assets/|models/|.*\\..*).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|assets/|models/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/daily-summary",
+      "schedule": "0 3 * * *"
+    }
   ]
 }

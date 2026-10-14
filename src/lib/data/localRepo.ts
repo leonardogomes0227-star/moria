@@ -277,7 +277,7 @@ export const localRepo: Repo = {
 
   bot: {
     settings: {
-      get: async () => read<BotSettings>(KEY.bot, () => defaultBotSettings),
+      get: async () => ({ ...defaultBotSettings, ...read<BotSettings>(KEY.bot, () => defaultBotSettings) }),
       async save(s) {
         write(KEY.bot, s)
       },
@@ -299,6 +299,19 @@ export const localRepo: Repo = {
         tokens_in: msgs.reduce((n, m) => n + m.tokens_in, 0),
         tokens_out: msgs.reduce((n, m) => n + m.tokens_out, 0),
         tokens_cache: msgs.reduce((n, m) => n + m.tokens_cache, 0),
+      }
+    },
+    async stats(month) {
+      const pedidos = orders().filter((o) => o.origem === 'whatsapp' && o.status !== 'cancelado' && o.criado_em.startsWith(month))
+      const chats = botChats().filter((c) => c.mensagens.some((m) => m.criado_em.startsWith(month)))
+      // Demonstração: as conversas de exemplo são poucas, então estimamos que ~4 em cada 10 conversas viram pedido.
+      const conversas = Math.max(chats.length, Math.round(pedidos.length / 0.4))
+      return {
+        conversas,
+        mensagens: chats.reduce((n, c) => n + c.mensagens.length, 0) + (conversas - chats.length) * 9,
+        pedidos: pedidos.length,
+        faturamento: pedidos.reduce((n, o) => n + o.total, 0),
+        atendimentoHumano: Math.max(chats.filter((c) => c.humano_ate).length, Math.round(conversas * 0.06)),
       }
     },
   },

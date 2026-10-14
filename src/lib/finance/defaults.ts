@@ -19,4 +19,6 @@ export const defaultBotSettings: BotSettings = {
   usd_brl: 5.5,
   modelo: 'claude-sonnet-5-5',
   limite_mensal: 100,
+  avisos_status: true,
+  resumo_diario: true,
 }

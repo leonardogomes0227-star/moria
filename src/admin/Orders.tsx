@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { PrinterIcon, WhatsappIcon } from '@/components/Icons'
 import { config } from '@/lib/config'
 import { repo } from '@/lib/data'
+import { notifyCustomer } from './notifyCustomer'
 import { syncStock } from './stockSync'
 import { formatPrice } from '@/lib/format'
 import type { Order, OrderStatus } from '@/lib/types'
@@ -262,9 +263,10 @@ export default function Orders() {
     try {
       await repo.orders.setStatus(order.id, status)
       const stockNote = await syncStock(order, status).catch(() => 'Atenção: não consegui atualizar o estoque.')
+      const notified = await notifyCustomer(order, status).catch(() => null)
       await reloadOrders()
       toast(
-        `Pedido #${order.numero}: ${status === 'cancelado' ? 'cancelado' : 'atualizado'}.${stockNote ? ` ${stockNote}` : ''}`,
+        `Pedido #${order.numero}: ${status === 'cancelado' ? 'cancelado' : 'atualizado'}.${stockNote ? ` ${stockNote}` : ''}${notified ? ` ${notified}` : ''}`,
       )
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Não foi possível atualizar.', 'error')

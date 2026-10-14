@@ -11,6 +11,8 @@ export interface StoreInfo {
   menu: MenuItem[]
   /** Loja aberta agora (pelo horário configurado). */
   open: boolean
+  /** Nomes dos itens que mais deixam lucro (ordem do melhor para o pior). Vazio se não houver fichas técnicas. */
+  topProfit?: string[]
 }
 
 export interface ChatTurn {

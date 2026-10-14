@@ -87,3 +87,18 @@ export async function downloadMedia(mediaId: string): Promise<Media> {
   if (data.length > MAX_MEDIA_BYTES) throw new Error('mídia grande demais')
   return { data, mime: (info.mime_type ?? file.headers.get('content-type') ?? '').split(';')[0] }
 }
+
+/** Envia uma mensagem-modelo aprovada (pode ser enviada fora da janela de 24 h). Os parâmetros não podem ter quebra de linha. */
+export async function sendTemplate(to: string, name: string, params: string[], language = 'pt_BR'): Promise<void> {
+  const res = await fetch(`https://graph.facebook.com/${env.graphVersion()}/${env.waPhoneId()}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.waToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to,
+      type: 'template',
+      template: { name, language: { code: language }, components: [{ type: 'body', parameters: params.map((text) => ({ type: 'text', text: text.replace(/\s*\n+\s*/g, ' | ').slice(0, 1000) })) }] },
+    }),
+  })
+  if (!res.ok) throw new Error(`WhatsApp (modelo) respondeu ${res.status}`)
+}

@@ -232,6 +232,10 @@ export interface BotSettings {
   modelo: string
   /** Teto de gasto com IA por mês, em reais. Ao atingir, o robô para e chama uma pessoa. 0 = sem limite. */
   limite_mensal: number
+  /** Avisa o cliente no WhatsApp quando o pedido muda de etapa (preparo, entrega…). */
+  avisos_status: boolean
+  /** Manda o resumo do dia para o WhatsApp do dono, no fim do expediente. */
+  resumo_diario: boolean
 }
 
 export interface BotMessage {

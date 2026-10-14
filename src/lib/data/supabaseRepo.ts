@@ -322,6 +322,26 @@ export const supabaseRepo: Repo = {
         .upsert({ telefone, humano_ate: ate })
       check(res.error)
     },
+    async stats(month) {
+      const sb = await client()
+      const [msgs, ords, humans] = await Promise.all([
+        sb.from('bot_messages').select('telefone,papel').gte('criado_em', monthStart(month)).lt('criado_em', nextMonth(month)).limit(20000),
+        sb.from('orders').select('total').eq('origem', 'whatsapp').neq('status', 'cancelado').gte('criado_em', monthStart(month)).lt('criado_em', nextMonth(month)),
+        sb.from('bot_sessions').select('telefone').not('humano_ate', 'is', null).gte('atualizado_em', monthStart(month)).lt('atualizado_em', nextMonth(month)),
+      ])
+      check(msgs.error)
+      check(ords.error)
+      check(humans.error)
+      const rows = (msgs.data ?? []) as { telefone: string; papel: string }[]
+      const pedidos = (ords.data ?? []) as { total: number }[]
+      return {
+        conversas: new Set(rows.filter((r) => r.papel === 'cliente').map((r) => r.telefone)).size,
+        mensagens: rows.length,
+        pedidos: pedidos.length,
+        faturamento: pedidos.reduce((n, o) => n + Number(o.total), 0),
+        atendimentoHumano: (humans.data ?? []).length,
+      }
+    },
     async usage(month) {
       const { data, error } = await (
         await client()

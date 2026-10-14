@@ -19,6 +19,15 @@ Antes de começar: assistente ligado, cardápio com itens disponíveis, horário
 | 11 | "Quero falar com uma pessoa" | Avisar que vai chamar um atendente. O dono recebe aviso no WhatsApp, o robô fica em silêncio nessa conversa, e o painel mostra "Atendimento humano". Clicar em "Devolver ao robô" volta ao normal. | Dono não recebeu aviso: conferir "Seu WhatsApp" na tela do Assistente. |
 | 12 | Depois de um pedido, "cadê meu pedido?" e depois, em outro dia, "oi" do mesmo número | Informar o status do pedido certo (só do próprio cliente) e, no "oi" seguinte, oferecer repetir o último pedido, confirmando endereço e total. | Mostrou pedido de outra pessoa: erro grave, me avise. |
 
+## Testes extras (recursos do dono)
+| # | Faça | Deve acontecer |
+|---|---|---|
+| 13 | Do WhatsApp do dono, mande "resumo" | Resposta com pedidos, faturamento, lucro bruto e mais vendidos do dia. |
+| 14 | Do WhatsApp do dono, "acabou bacon" e depois "voltou bacon" | Os itens com bacon somem do site e voltam. De outro número, "acabou bacon" NÃO faz nada (é tratado como cliente). |
+| 15 | Do WhatsApp do dono, "fecha a loja" e "abre a loja" | O site para e volta a receber pedidos. |
+| 16 | Faça um pedido pelo site informando o "Contato" e envie a mensagem; no painel, avance o pedido até "Saiu para entrega" | Você recebe a confirmação "Pedido recebido" ao enviar, e a mensagem de cada etapa chega no WhatsApp do cliente. Sem telefone ou depois de 24 h, o painel avisa que não enviou. |
+| 17 | Espere 23h (ou chame `/api/daily-summary` com o `CRON_SECRET`) | O dono recebe o resumo do dia. |
+
 ## Depois dos 12 testes
 1. **Painel:** o pedido do teste 6 aparece com a etiqueta "WhatsApp". Marque como concluído e confira o estoque (se a baixa automática estiver ligada).
 2. **Gasto:** olhe "Gasto com IA neste mês" no Assistente. Ele deve ser de centavos a poucos reais para esses 12 testes. Se estiver muito alto, troque o modelo para Sonnet ou Haiku.

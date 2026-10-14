@@ -42,6 +42,8 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
   const saved: { text: string; usage: Usage }[] = []
   const humans: string[] = []
   const edited: [string, string][] = []
+  const avail: [string, boolean][] = []
+  const paused: boolean[] = []
   const sawImages: number[] = []
   const sawText: string[] = []
   let human: Date | null = null
@@ -58,6 +60,15 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
     historyBefore: async (): Promise<ChatTurn[]> => [],
     humanUntil: async () => human,
     recentCustomerMessages: async () => recent,
+    ownerPorts: () => ({
+      menu: async () => menuItems.map((m) => ({ ...m })),
+      setAvailable: async (ids, v) => { avail.push([ids.join(','), v]) },
+      setPaused: async (v) => { paused.push(v) },
+      orders: async () => [],
+      finance: async () => ({ ingredients: [], recipes: [] }),
+      now: () => new Date('2026-10-13T20:00:00Z'),
+      timeZone: 'America/Campo_Grande',
+    }),
     setMessageText: async (id, text) => { edited.push([id, text]) },
     monthUsage: async () => month,
     saveReply: async (_p, text, usage) => { saved.push({ text, usage }) },
@@ -74,7 +85,7 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
     },
   }
   const deps = { store, llm, send: async (_t: string, t: string) => { sent.push(t) }, now: () => new Date('2026-10-13T20:00:00Z'), sleep: async () => undefined }
-  return { deps, sent, saved, humans, edited, sawImages, sawText, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
+  return { deps, sent, saved, humans, edited, avail, paused, sawImages, sawText, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
 }
 function m(id: string, text = 'oi', type = 'text'): Incoming {
   return { id: id, from: '5567999990000', name: 'Ana', type: type, text: text }
@@ -186,5 +197,34 @@ function m(id: string, text = 'oi', type = 'text'): Incoming {
   assert.equal(bad.calls(), 0)
   const sticker = setup(info())
   assert.equal(await handleIncoming({ id: 's1', from: '5567999990000', name: 'Ana', type: 'sticker', text: '' }, sticker.deps), 'unsupported')
+}
+{
+  // comandos do dono: só do número cadastrado (aceita o telefone sem o 9)
+  const i = info({ telefone_dono: '5567998022571' })
+  const s = setup(i)
+  const owner: Incoming = { id: 'o1', from: '556798022571', name: 'Dono', type: 'text', text: 'fecha a loja' }
+  assert.equal(await handleIncoming(owner, s.deps), 'owner')
+  assert.deepEqual(s.paused, [true])
+  assert.equal(s.calls(), 0)
+  assert.match(s.sent[0], /parou de receber/)
+  assert.equal(await handleIncoming({ ...owner, id: 'o2', text: 'acabou o x-tudo' }, s.deps), 'owner')
+  assert.equal(s.avail.length, 1)
+  assert.equal(s.avail[0][1], false)
+  // o dono falando de outra coisa cai no atendimento normal
+  assert.equal(await handleIncoming({ ...owner, id: 'o3', text: 'oi, quero um x-bacon' }, s.deps), 'replied')
+  // outro número NÃO consegue usar os comandos
+  const intruder = setup(i)
+  assert.equal(await handleIncoming({ ...owner, id: 'x1', from: '5567911112222' }, intruder.deps), 'replied')
+  assert.deepEqual(intruder.paused, [])
+  // pedido montado pelo site: confirma sem chamar a IA
+  const site = setup(info())
+  const msgText = '*Novo pedido - Moriá Hamburgueria*\n\n1x X-Bacon - R$ 22,00\n\n*Total: R$ 27,00*\n\nNome: Ana Souza\nTipo: Entrega'
+  assert.equal(await handleIncoming({ id: 'w1', from: '5567999990000', name: 'Ana', type: 'text', text: msgText }, site.deps), 'site-order')
+  assert.equal(site.calls(), 0)
+  assert.match(site.sent[0], /Pedido recebido, Ana! ✅/)
+  assert.match(site.sent[0], /avisando por aqui/)
+  const quiet = setup(info({ avisos_status: false }))
+  await handleIncoming({ id: 'w2', from: '5567999990000', name: 'Ana', type: 'text', text: msgText }, quiet.deps)
+  assert.doesNotMatch(quiet.sent[0], /avisando/)
 }
 console.log('webhook: todos os testes passaram')

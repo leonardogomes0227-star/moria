@@ -59,3 +59,20 @@ Chat com visual de WhatsApp para o dono experimentar o robô sem login. As respo
 - **Estoque:** pedidos do robô entram como qualquer outro; a baixa automática de ingredientes (Custos → Ingredientes) acontece quando o pedido é marcado como concluído.
 
 > Áudio, foto e a conexão com a Meta **não foram testados ao vivo** (só com simulações). Teste com um número real antes de entregar.
+
+## Recursos para o dono
+- **Resultados do robô** (tela Assistente): conversas atendidas, pedidos fechados, valor vendido e tempo poupado (estimativa de 4 min por conversa).
+- **Comandos do dono pelo WhatsApp** — só do número cadastrado em "Seu WhatsApp" (aceita com ou sem o 9). Qualquer outra mensagem do dono é atendida como a de um cliente. Funciona com o assistente ligado.
+  - `resumo` / `resumo ontem`, `pedidos`, `acabou bacon` / `voltou bacon`, `pausa X-Tudo`, `fecha a loja` / `abre a loja`.
+  - "Acabou bacon" pausa todos os itens que levam bacon no nome ou na descrição. O robô responde com a lista e como desfazer.
+- **Aviso de status ao cliente:** quando o dono avança o pedido no painel, o servidor (`/api/order-notify`) avisa o cliente no WhatsApp. Regras:
+  - o pedido precisa ter o telefone do cliente (no site é o campo "Contato"; nos pedidos do robô já vem);
+  - o cliente precisa ter falado com a loja nas últimas **24 horas** (limite da Meta para texto livre). Fora disso, o painel avisa que não enviou;
+  - liga/desliga na tela Assistente.
+- **Pedido feito pelo site:** a mensagem que o site manda ao WhatsApp ("*Novo pedido - …") não passa pela IA: o robô só confirma o recebimento. Isso evita pedido duplicado.
+- **Resumo do dia:** todo dia às 23h (Campo Grande) a Vercel chama `/api/daily-summary`, que manda ao dono vendas, ticket médio, pedidos pelo robô, lucro bruto (faturamento menos ingredientes) e os mais vendidos. Configure `CRON_SECRET` na Vercel (qualquer texto longo e secreto).
+  - Texto livre só chega se o dono falou com a loja nas últimas 24 h. Para chegar sempre, crie na Meta um modelo (categoria *Utilidade*, idioma pt_BR, com uma variável `{{1}}` no corpo) e informe o nome em `WHATSAPP_SUMMARY_TEMPLATE`.
+  - O horário é UTC no `vercel.json` (`0 3 * * *`); o plano gratuito da Vercel permite uma execução por dia.
+- **Sugestão pela margem:** com as fichas técnicas cadastradas, o robô conhece os 5 itens que mais deixam lucro por unidade e os sugere primeiro quando o cliente está em dúvida, sem esconder os outros nem falar de lucro com o cliente.
+
+> Nada disso foi testado ao vivo com a Meta (só com simulações): avisos de status, comandos do dono e resumo diário dependem do WhatsApp de verdade e do cron da Vercel. Teste cada um com um número real antes de entregar.

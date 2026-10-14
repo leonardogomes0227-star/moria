@@ -27,6 +27,15 @@ export interface Crud<T extends { id: string }> {
   remove(id: string): Promise<void>
 }
 
+/** Resultados do robô no mês. */
+export interface BotStats {
+  conversas: number
+  mensagens: number
+  pedidos: number
+  faturamento: number
+  atendimentoHumano: number
+}
+
 export interface BotUsage {
   mensagens: number
   tokens_in: number
@@ -97,6 +106,8 @@ export interface Repo {
     setHuman(telefone: string, ate: string | null): Promise<void>
     /** Consumo de IA no mês (AAAA-MM). */
     usage(month: string): Promise<BotUsage>
+    /** Conversas atendidas e pedidos fechados pelo robô no mês (AAAA-MM). */
+    stats(month: string): Promise<BotStats>
   }
   /** Envia uma imagem e devolve a URL a gravar no registro. */
   uploadImage(file: File): Promise<string>

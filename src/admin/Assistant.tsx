@@ -3,11 +3,14 @@ import { Button } from '@/components/Button'
 import { WaText } from '@/components/WaText'
 import { repo } from '@/lib/data'
 import { createDemoAgent } from '@/lib/demoAgent'
+import { ownerCommand } from '@/lib/ownerCommands'
+import { panelOwnerPorts } from './ownerPorts'
+import { authHeader } from './serverApi'
 import { openStatus } from '@/lib/hours'
 import { useSettings } from '@/store/settings'
-import type { BotUsage } from '@/lib/data/repo'
+import type { BotStats, BotUsage } from '@/lib/data/repo'
 import { formatPrice } from '@/lib/format'
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { BOT_MODELS as MODELS, estimateBotCost as estimateCost } from '@/lib/finance/botCost'
 import { defaultBotSettings } from '@/lib/finance/defaults'
 import type { BotConversation, BotSettings } from '@/lib/types'
@@ -27,18 +30,12 @@ interface Status {
   transcricao: boolean
 }
 
-async function authHeader(): Promise<Record<string, string>> {
-  const sb = await getSupabase()
-  const token = (await sb?.auth.getSession())?.data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 function StatusCard({ status, error }: { status: Status | null; error: boolean }) {
   if (!isSupabaseConfigured)
     return (
       <HelpBox title="Você está vendo a demonstração">
         <p>
-          As conversas abaixo são exemplos e o simulador usa respostas de mentira. Em produção (com Supabase, chave da IA e número do
+          As conversas abaixo são exemplos e o simulador segue um roteiro (sem IA), só para mostrar o fluxo. Em produção (com Supabase, chave da IA e número do
           WhatsApp conectados) o robô responde de verdade. O passo a passo está no arquivo <code>docs/ASSISTENTE-WHATSAPP.md</code>.
         </p>
       </HelpBox>
@@ -80,6 +77,7 @@ function Simulator({ settings }: { settings: BotSettings }) {
   const endRef = useRef<HTMLDivElement>(null)
   const items = useMenuStore((s) => s.items)
   const agentRef = useRef<ReturnType<typeof createDemoAgent> | null>(null)
+  const [asOwner, setAsOwner] = useState(false)
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'nearest' })
@@ -94,7 +92,14 @@ function Simulator({ settings }: { settings: BotSettings }) {
     setText('')
     setBusy(true)
     try {
-      if (!isSupabaseConfigured) {
+      const ownerAnswer = asOwner ? await ownerCommand(msg, panelOwnerPorts) : null
+      if (asOwner && ownerAnswer === null) {
+        setLines((l) => [...l, { role: 'assistant', content: 'Isso não é um comando do dono. Mande *ajuda* para ver a lista. (Fora do modo dono, eu atendo como atendo um cliente.)' }])
+        setInfo('Modo dono: só comandos. Desmarque a caixa para conversar como cliente.')
+      } else if (ownerAnswer !== null) {
+        setLines((l) => [...l, { role: 'assistant', content: ownerAnswer }])
+        setInfo('Modo dono: este comando mexeu nos dados do painel de verdade.')
+      } else if (!isSupabaseConfigured) {
         await new Promise((r) => setTimeout(r, 500))
         const { settings: store } = useSettings.getState()
         agentRef.current ??= createDemoAgent(items, store, openStatus(store.hours).label)
@@ -136,8 +141,14 @@ function Simulator({ settings }: { settings: BotSettings }) {
 
   return (
     <Card title="Testar uma conversa" description={`Converse como se fosse um cliente. ${isSupabaseConfigured ? 'Usa a IA de verdade, sem criar pedidos.' : 'Na demonstração as respostas são de mentira.'}`}>
+      <label className="mb-3 flex items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 h-5 w-5 accent-[#D61F1F]" checked={asOwner} onChange={(e) => setAsOwner(e.target.checked)} />
+        <span>
+          <strong>Falar como o dono</strong> — teste os comandos (resumo, “acabou bacon”, “fecha a loja”). No WhatsApp de verdade, só o número cadastrado em “Seu WhatsApp” pode usar.
+        </span>
+      </label>
       <div className="h-72 space-y-2 overflow-y-auto rounded-xl bg-black/30 p-3" role="log" aria-live="polite" aria-label="Conversa de teste">
-        {lines.length === 0 && <p className="text-sm text-muted">Experimente: “oi, qual o horário?” ou “quero pedir um hambúrguer”.</p>}
+        {lines.length === 0 && <p className="text-sm text-muted">{asOwner ? 'Experimente: “resumo”, “pedidos”, “acabou bacon” ou “ajuda”.' : 'Experimente: “oi, qual o horário?” ou “quero um X-Bacon e uma Coca”.'}</p>}
         {lines.map((l, i) => (
           <p key={i} className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${l.role === 'user' ? 'ml-auto bg-ember/20' : 'bg-white/10'}`}>
             <WaText text={l.content} />
@@ -231,10 +242,39 @@ function Conversations({ list, reload }: { list: BotConversation[]; reload: () =
   )
 }
 
+/** Quanto o robô trabalhou no mês: conversas, pedidos fechados e dinheiro. */
+function Results({ stats }: { stats: BotStats | null }) {
+  if (!stats) return null
+  const conv = stats.conversas > 0 ? Math.round((stats.pedidos / stats.conversas) * 100) : 0
+  // Estimativa: cada conversa tomaria uns 4 minutos de um atendente.
+  const horas = (stats.conversas * 4) / 60
+  const tiles: [string, string, string][] = [
+    ['Conversas atendidas', String(stats.conversas), 'clientes diferentes que falaram com o robô'],
+    ['Pedidos fechados', String(stats.pedidos), `${conv}% das conversas viraram pedido`],
+    ['Vendido pelo robô', formatPrice(stats.faturamento), 'pedidos de WhatsApp, sem os cancelados'],
+    ['Tempo poupado', `${horas.toFixed(1).replace('.', ',')} h`, 'estimativa: 4 min de atendimento por conversa'],
+  ]
+  return (
+    <Card title="Resultados do robô neste mês" description={isSupabaseConfigured ? 'Calculado com as conversas e os pedidos reais.' : 'Dados de demonstração.'}>
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {tiles.map(([label, value, hint]) => (
+          <div key={label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <dt className="text-sm text-muted">{label}</dt>
+            <dd className="mt-1 text-2xl font-bold sm:text-3xl">{value}</dd>
+            <p className="mt-1 text-xs text-muted">{hint}</p>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-sm text-muted">Passou para atendimento humano: {stats.atendimentoHumano} {stats.atendimentoHumano === 1 ? 'conversa' : 'conversas'}.</p>
+    </Card>
+  )
+}
+
 export default function Assistant() {
   const [settings, setSettings] = useState<BotSettings | null>(null)
   const [convs, setConvs] = useState<BotConversation[]>([])
   const [usage, setUsage] = useState<BotUsage | null>(null)
+  const [stats, setStats] = useState<BotStats | null>(null)
   const [status, setStatus] = useState<Status | null>(null)
   const [statusErr, setStatusErr] = useState(false)
   const [error, setError] = useState('')
@@ -243,10 +283,11 @@ export default function Assistant() {
 
   const reload = useCallback(async () => {
     try {
-      const [s, c, u] = await Promise.all([repo.bot.settings.get(), repo.bot.conversations(), repo.bot.usage(monthKey())])
+      const [s, c, u, st] = await Promise.all([repo.bot.settings.get(), repo.bot.conversations(), repo.bot.usage(monthKey()), repo.bot.stats(monthKey())])
       setSettings({ ...defaultBotSettings, ...s })
       setConvs(c)
       setUsage(u)
+      setStats(st)
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível carregar o assistente.')
@@ -338,6 +379,22 @@ export default function Assistant() {
                 <textarea id="bot-inst" className="input min-h-28" maxLength={2000} value={settings.instrucoes} onChange={(e) => set('instrucoes', e.target.value)} placeholder="Ex.: Chave Pix: CNPJ 00.000.000/0001-00. Terça tem 10% no combo. Não entregamos depois das 23h." />
                 <p className="mt-1 text-xs text-muted">Escreva do seu jeito. O robô segue essas regras, mas nunca muda preços do cardápio.</p>
               </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-semibold">Avisar o cliente a cada etapa do pedido</p>
+                    <p className="text-sm text-muted">Quando você avança o pedido (preparo, saiu para entrega…), o cliente recebe uma mensagem no WhatsApp. Só funciona até 24 h depois da última mensagem dele.</p>
+                  </div>
+                  <Toggle checked={settings.avisos_status} onChange={(v) => set('avisos_status', v)} label="Avisar o cliente a cada etapa do pedido" />
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-semibold">Resumo do dia no seu WhatsApp</p>
+                    <p className="text-sm text-muted">Todo dia, no fim do expediente (23h), você recebe vendas, lucro bruto e os lanches mais vendidos.</p>
+                  </div>
+                  <Toggle checked={settings.resumo_diario} onChange={(v) => set('resumo_diario', v)} label="Resumo do dia no seu WhatsApp" />
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <NumField id="bot-limite" label="Limite de gasto com IA por mês" prefix="R$" value={settings.limite_mensal} onChange={(v) => set('limite_mensal', v)} hint="Ao chegar nesse valor, o robô para sozinho, avisa o cliente e chama você. 0 = sem limite." />
                 <NumField id="bot-usd" label="Cotação do dólar (só para estimar custo)" prefix="R$" value={settings.usd_brl} onChange={(v) => set('usd_brl', v)} />
@@ -346,7 +403,17 @@ export default function Assistant() {
             </div>
           </Card>
         </form>
+        <Results stats={stats} />
         <Simulator settings={settings} />
+        <Card title="Comandos do dono pelo WhatsApp" description="Mande estas mensagens do WhatsApp cadastrado em “Seu WhatsApp”. Qualquer outro número é tratado como cliente.">
+          <ul className="space-y-1.5 text-sm text-white/85">
+            <li><strong>resumo</strong> — vendas e lucro de hoje (ou <strong>resumo ontem</strong>)</li>
+            <li><strong>pedidos</strong> — o que está em andamento</li>
+            <li><strong>acabou bacon</strong> — pausa os itens que levam bacon · <strong>voltou bacon</strong> libera de novo</li>
+            <li><strong>pausa X-Tudo</strong> — pausa um item pelo nome</li>
+            <li><strong>fecha a loja</strong> / <strong>abre a loja</strong> — para e volta a receber pedidos pelo site</li>
+          </ul>
+        </Card>
         <Card title="Gasto com IA neste mês" description="Estimativa pelo consumo real de tokens e pela cotação acima.">
           <p className="text-3xl font-bold">{formatPrice(cost)}</p>
           {settings.limite_mensal > 0 && (

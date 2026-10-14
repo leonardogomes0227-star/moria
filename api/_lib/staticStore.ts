@@ -1,4 +1,7 @@
+import { seedFinanceSettings, seedIngredients, seedRecipes } from '../../src/data/financeSeed.ts'
 import { menuItems } from '../../src/data/menu.ts'
+import { buildContext } from '../../src/lib/finance/calc.ts'
+import { rankByProfit } from '../../src/lib/finance/marginRank.ts'
 import { defaultSettings } from '../../src/lib/config.ts'
 import { defaultBotSettings } from '../../src/lib/finance/defaults.ts'
 import { env } from './env.js'
@@ -22,6 +25,7 @@ export function createStaticStore(): BotStore {
         bot: { ...defaultBotSettings, ativo: true },
         menu: menuItems,
         open: isOpenAt(defaultSettings.hours, new Date(), tz),
+        topProfit: rankByProfit(menuItems, buildContext(seedIngredients, seedRecipes), seedFinanceSettings).slice(0, 5).map((r) => r.item.nome),
       }
     },
     history: async () => [],

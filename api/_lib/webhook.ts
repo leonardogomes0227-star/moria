@@ -1,7 +1,9 @@
 import { estimateBotCost } from '../../src/lib/finance/botCost.ts'
+import { ownerCommand, type OwnerPorts } from '../../src/lib/ownerCommands.ts'
+import { samePhone } from '../../src/lib/phone.ts'
 import { splitReply, typingDelay } from './split.js'
 import { HANDOFF_FALLBACK, runAgent, type LlmClient } from './agent.js'
-import type { BotStore, ChatTurn, Usage } from './types.js'
+import type { BotStore, ChatTurn, Order, Usage } from './types.js'
 import type { Incoming, Media } from './whatsapp.js'
 
 /** Operações extras que só o webhook usa (registro de mensagens e sessão). */
@@ -14,9 +16,19 @@ export interface WebhookStore extends BotStore {
   setMessageText(waId: string, text: string): Promise<void>
   humanUntil(phone: string): Promise<Date | null>
   recentCustomerMessages(phone: string, minutes: number): Promise<number>
+  /** Acesso do dono aos dados (comandos pelo WhatsApp). */
+  ownerPorts(timeZone: string, now: () => Date): OwnerPorts
   /** Tokens gastos pelo assistente neste mês (para o limite de gasto). */
   monthUsage(now: Date): Promise<Usage>
   saveReply(phone: string, text: string, usage: Usage): Promise<void>
+}
+
+/** Tudo que o servidor de produção (Supabase) oferece, além do webhook: avisos de status e resumo diário. */
+export interface ServerStore extends WebhookStore {
+  ordersSince(iso: string): Promise<Order[]>
+  getOrder(id: string): Promise<Order | null>
+  /** Última mensagem recebida de um destes telefones (formas com e sem o 9). */
+  lastCustomerMessage(variants: string[]): Promise<{ telefone: string; criado_em: string } | null>
 }
 
 export interface WebhookDeps {
@@ -30,7 +42,7 @@ export interface WebhookDeps {
   media?: { download: (id: string) => Promise<Media>; transcribe?: (data: Buffer, mime: string) => Promise<string> }
 }
 
-export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'budget' | 'unsupported' | 'replied' | 'error'
+export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'budget' | 'owner' | 'site-order' | 'unsupported' | 'replied' | 'error'
 
 const MAX_PER_HOUR = 40
 const MAX_TEXT = 1000
@@ -54,6 +66,12 @@ export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<
     const isNew = await store.claimMessage(msg)
     if (!isNew) return 'duplicate'
 
+    // Comandos do dono (só do número cadastrado): "resumo", "acabou bacon", "fecha a loja"…
+    if (msg.type === 'text' && info.bot.telefone_dono && samePhone(msg.from, info.bot.telefone_dono)) {
+      const answer = await ownerCommand(msg.text, store.ownerPorts(info.timezone, deps.now))
+      if (answer !== null) return reply(answer, 'owner')
+    }
+
     const until = await store.humanUntil(msg.from)
     if (until && until > deps.now()) return 'human'
     if (info.bot.modo === 'fora_do_horario' && info.open) return 'open-hours'
@@ -69,6 +87,12 @@ export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<
       await store.requestHuman(msg.from, msg.name, 'Limite mensal de gasto do assistente atingido. Aumente o limite no painel para religar.', 2)
       await send(msg.from, HANDOFF_FALLBACK)
       return 'budget'
+    }
+
+    // Mensagem que o próprio site monta ao finalizar o pedido: o pedido já está no painel, então não passa pela IA.
+    if (msg.type === 'text' && /^\*?novo pedido\b/i.test(msg.text.trim())) {
+      const nome = msg.text.match(/^Nome:\s*(.+)$/im)?.[1]?.trim().split(/\s+/)[0]
+      return reply(`Pedido recebido${nome ? `, ${nome}` : ''}! ✅ A cozinha já viu e confirma em instantes.${info.bot.avisos_status ? ' Vou te avisando por aqui a cada etapa. 🔥' : ''}`, 'site-order')
     }
 
     let text = msg.text

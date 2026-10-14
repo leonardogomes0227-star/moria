@@ -1,4 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { buildContext } from '../../src/lib/finance/calc.ts'
+import { defaultFinanceSettings } from '../../src/lib/finance/defaults.ts'
+import { rankByProfit } from '../../src/lib/finance/marginRank.ts'
+import type { OwnerPorts } from '../../src/lib/ownerCommands.ts'
+import type { Ingredient, Order, Recipe } from '../../src/lib/types.ts'
 import { defaultSettings } from '../../src/lib/config.ts'
 import { defaultBotSettings } from '../../src/lib/finance/defaults.ts'
 import type { MenuItem, NewOrder, StoreSettings } from '../../src/lib/types.ts'
@@ -6,7 +11,7 @@ import { env } from './env.js'
 import { isOpenAt } from './hours.js'
 import type { BotStore, ChatTurn, StoreInfo, Usage } from './types.js'
 import { sendText, type Incoming } from './whatsapp.js'
-import type { WebhookStore } from './webhook.js'
+import type { ServerStore } from './webhook.js'
 
 let cached: SupabaseClient | null = null
 
@@ -22,13 +27,20 @@ const ok = (error: { message: string } | null) => {
 
 const HOURS = 3_600_000
 
-export function createSupabaseStore(sb: SupabaseClient = serviceClient()): WebhookStore {
-  const store: WebhookStore = {
+/** O Postgres pode devolver numéricos como texto: converte os campos que são números. */
+const numbers = (rows: unknown): Record<string, unknown>[] =>
+  ((rows ?? []) as Record<string, unknown>[]).map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)) && !/(id|nome|ref|grupo|unidade|tipo|modo)$/.test(k) ? Number(v) : v])))
+
+export function createSupabaseStore(sb: SupabaseClient = serviceClient()): ServerStore {
+  const store: ServerStore = {
     async loadStore(): Promise<StoreInfo> {
-      const [menu, settings, bot] = await Promise.all([
+      const [menu, settings, bot, ings, recs, fin] = await Promise.all([
         sb.from('menu_items').select('*').order('ordem'),
         sb.from('store_settings').select('*').eq('id', 1).maybeSingle(),
         sb.from('bot_settings').select('*').eq('id', 1).maybeSingle(),
+        sb.from('ingredients').select('*'),
+        sb.from('recipes').select('*'),
+        sb.from('finance_settings').select('*').eq('id', 1).maybeSingle(),
       ])
       ok(menu.error)
       ok(settings.error)
@@ -49,6 +61,12 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
       const { id: _id, ...botRest } = (bot.data ?? {}) as Record<string, unknown>
       void _id
       const tz = env.timezone()
+      const items = ((menu.data ?? []) as MenuItem[]).map((m) => ({ ...m, preco: Number(m.preco) }))
+      // Itens que mais deixam lucro (só com fichas técnicas cadastradas): o robô os sugere primeiro quando faz sentido.
+      const ctx = buildContext(numbers(ings.data) as unknown as Ingredient[], (recs.data ?? []) as Recipe[])
+      const { id: _fid, ...finRest } = (fin.data ?? {}) as Record<string, unknown>
+      void _fid
+      const topProfit = rankByProfit(items, ctx, { ...defaultFinanceSettings, ...numbers([finRest])[0] }).slice(0, 5).map((r) => r.item.nome)
       return {
         name: env.storeName(),
         address: env.storeAddress(),
@@ -56,8 +74,9 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
         timezone: tz,
         settings: s,
         bot: { ...defaultBotSettings, ...botRest },
-        menu: ((menu.data ?? []) as MenuItem[]).map((m) => ({ ...m, preco: Number(m.preco) })),
+        menu: items,
         open: isOpenAt(s.hours, new Date(), tz),
+        topProfit,
       }
     },
 
@@ -113,6 +132,52 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
         ok(res.error)
       }
       return true
+    },
+
+    ownerPorts(timeZone, now): OwnerPorts {
+      return {
+        menu: async () => {
+          const { data, error } = await sb.from('menu_items').select('*').order('ordem')
+          ok(error)
+          return ((data ?? []) as MenuItem[]).map((m) => ({ ...m, preco: Number(m.preco) }))
+        },
+        setAvailable: async (ids, available) => {
+          const res = await sb.from('menu_items').update({ disponivel: available }).in('id', ids)
+          ok(res.error)
+        },
+        setPaused: async (paused) => {
+          const res = await sb.from('store_settings').update({ paused }).eq('id', 1)
+          ok(res.error)
+        },
+        orders: async () => store.ordersSince(new Date(now().getTime() - 3 * 86_400_000).toISOString()),
+        finance: async () => {
+          const [ings, recs] = await Promise.all([sb.from('ingredients').select('*'), sb.from('recipes').select('*')])
+          ok(ings.error)
+          ok(recs.error)
+          return { ingredients: numbers(ings.data) as unknown as Ingredient[], recipes: (recs.data ?? []) as Recipe[] }
+        },
+        now,
+        timeZone,
+      }
+    },
+
+    async ordersSince(iso: string): Promise<Order[]> {
+      const { data, error } = await sb.from('orders').select('*').gte('criado_em', iso).order('criado_em', { ascending: false }).limit(1000)
+      ok(error)
+      return (numbers(data) as unknown as Order[])
+    },
+
+    async lastCustomerMessage(variants: string[]) {
+      const { data, error } = await sb.from('bot_messages').select('telefone,criado_em').in('telefone', variants).eq('papel', 'cliente').order('criado_em', { ascending: false }).limit(1)
+      ok(error)
+      const row = (data ?? [])[0] as { telefone: string; criado_em: string } | undefined
+      return row ? { telefone: row.telefone, criado_em: row.criado_em } : null
+    },
+
+    async getOrder(id: string): Promise<Order | null> {
+      const { data, error } = await sb.from('orders').select('*').eq('id', id).maybeSingle()
+      ok(error)
+      return data ? (numbers([data])[0] as unknown as Order) : null
     },
 
     async setMessageText(waId, text) {
