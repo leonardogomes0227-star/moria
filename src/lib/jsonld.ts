@@ -27,10 +27,10 @@ export function buildJsonLd() {
     hasMenu: `${config.siteUrl}/#cardapio`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: config.address.street,
+      ...(config.address.street ? { streetAddress: config.address.street } : {}),
       addressLocality: config.address.city,
       addressRegion: config.address.state,
-      postalCode: config.address.zip,
+      ...(config.address.zip ? { postalCode: config.address.zip } : {}),
       addressCountry: 'BR',
     },
     openingHoursSpecification: config.hours.flatMap((h, day) =>

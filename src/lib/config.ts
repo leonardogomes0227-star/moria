@@ -41,11 +41,11 @@ export const config = {
   credit: { label: 'STCK.Labs', url: 'https://instagram.com/stck.labs' },
 
   address: {
-    street: 'Rua Exemplo, 000 (EDITAR)',
-    district: 'Centro (EDITAR)',
+    street: '', // EDITAR: rua e número (vazio = mostra só a cidade)
+    district: '', // EDITAR: bairro
     city: 'Rio Verde de Mato Grosso',
     state: 'MS',
-    zip: '79480-000', // EDITAR
+    zip: '', // EDITAR
   },
   /** Link "Como chegar" — EDITAR com o link real do Google Maps. */
   mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rio+Verde+de+Mato+Grosso+MS',
@@ -101,5 +101,7 @@ export const DAY_NAMES = [
   'Sábado',
 ] as const
 
-export const fullAddress = (): string =>
-  `${config.address.street} - ${config.address.district}, ${config.address.city}/${config.address.state}`
+export const fullAddress = (): string => {
+  const place = [config.address.street, config.address.district].filter(Boolean).join(' - ')
+  return `${place ? `${place}, ` : ''}${config.address.city}/${config.address.state}`
+}

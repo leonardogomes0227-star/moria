@@ -51,15 +51,14 @@ export default function Test() {
     let parts: string[]
     let order = false
     let handoff = false
+    // Se a IA não responder (sem chave, limite, erro ou demora), segue no roteiro de demonstração: a conversa nunca trava.
+    const ctrl = new AbortController()
+    const timer = window.setTimeout(() => ctrl.abort(), 25_000)
     try {
-      const res = await fetch('/api/demo-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, history }) })
-      if (res.status === 404 || res.status === 503 || res.status === 405) throw new Error('offline')
-      const data = (await res.json()) as { parts?: string[]; error?: string; orderCreated?: boolean }
-      if (!res.ok || !data.parts?.length) {
-        setNotice(data.error ?? 'Não consegui responder agora.')
-        setTyping(false)
-        return
-      }
+      const res = await fetch('/api/demo-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, history }), signal: ctrl.signal })
+      if (!res.ok) throw new Error(String(res.status))
+      const data = (await res.json()) as { parts?: string[]; orderCreated?: boolean }
+      if (!data.parts?.length) throw new Error('vazio')
       setLive(true)
       parts = data.parts
       order = Boolean(data.orderCreated)
@@ -77,6 +76,7 @@ export default function Test() {
         if (repo.mode === 'local') await repo.orders.create(turn.order).catch(() => undefined)
       }
     }
+    window.clearTimeout(timer)
     for (const [i, p] of parts.entries()) {
       if (i > 0) setTyping(true)
       await wait(typingMs(p))
