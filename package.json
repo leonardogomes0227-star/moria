@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "tsx scripts/test-bot.ts && tsx scripts/test-webhook.ts && node --experimental-strip-types scripts/test-finance.ts"
+    "test": "tsx scripts/test-bot.ts && tsx scripts/test-webhook.ts && tsx scripts/test-demo-agent.ts && node --experimental-strip-types scripts/test-finance.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/Button'
+import { WaText } from '@/components/WaText'
 import { repo } from '@/lib/data'
-import { demoReply } from '@/lib/demoReply'
+import { createDemoAgent } from '@/lib/demoAgent'
+import { openStatus } from '@/lib/hours'
+import { useSettings } from '@/store/settings'
 import type { BotUsage } from '@/lib/data/repo'
 import { formatPrice } from '@/lib/format'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
@@ -76,6 +79,7 @@ function Simulator({ settings }: { settings: BotSettings }) {
   const [info, setInfo] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
   const items = useMenuStore((s) => s.items)
+  const agentRef = useRef<ReturnType<typeof createDemoAgent> | null>(null)
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'nearest' })
@@ -92,7 +96,11 @@ function Simulator({ settings }: { settings: BotSettings }) {
     try {
       if (!isSupabaseConfigured) {
         await new Promise((r) => setTimeout(r, 500))
-        setLines((l) => [...l, { role: 'assistant', content: demoReply(msg).join('\n\n') }])
+        const { settings: store } = useSettings.getState()
+        agentRef.current ??= createDemoAgent(items, store, openStatus(store.hours).label)
+        const turn = agentRef.current.reply(msg)
+        if (turn.order) await repo.orders.create(turn.order).catch(() => undefined)
+        setLines((l) => [...l, { role: 'assistant', content: turn.parts.join('\n\n') }])
         setInfo('Simulação de demonstração: a IA de verdade responde com base no seu cardápio e regras.')
       } else {
         const res = await fetch('/api/bot-chat', {
@@ -132,7 +140,7 @@ function Simulator({ settings }: { settings: BotSettings }) {
         {lines.length === 0 && <p className="text-sm text-muted">Experimente: “oi, qual o horário?” ou “quero pedir um hambúrguer”.</p>}
         {lines.map((l, i) => (
           <p key={i} className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${l.role === 'user' ? 'ml-auto bg-ember/20' : 'bg-white/10'}`}>
-            {l.content}
+            <WaText text={l.content} />
           </p>
         ))}
         {busy && <p className="text-sm text-muted">{settings.nome} está digitando…</p>}

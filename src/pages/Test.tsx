@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Logo } from '@/components/Logo'
+import { WaText } from '@/components/WaText'
 import { config } from '@/lib/config'
-import { demoReply } from '@/lib/demoReply'
+import { repo } from '@/lib/data'
+import { createDemoAgent } from '@/lib/demoAgent'
+import { openStatus } from '@/lib/hours'
+import { useMenuStore } from '@/store/menu'
+import { useSettings } from '@/store/settings'
 
 interface Msg {
   from: 'cliente' | 'robo'
@@ -21,6 +26,7 @@ export default function Test() {
   const [live, setLive] = useState<boolean | null>(null)
   const [notice, setNotice] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const agentRef = useRef<ReturnType<typeof createDemoAgent> | null>(null)
 
   useEffect(() => {
     document.title = `Teste o atendente · ${config.name}`
@@ -44,6 +50,7 @@ export default function Test() {
     setNotice('')
     let parts: string[]
     let order = false
+    let handoff = false
     try {
       const res = await fetch('/api/demo-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, history }) })
       if (res.status === 404 || res.status === 503 || res.status === 405) throw new Error('offline')
@@ -59,7 +66,16 @@ export default function Test() {
     } catch {
       setLive(false)
       await wait(600)
-      parts = demoReply(t)
+      await useMenuStore.getState().load()
+      const { settings } = useSettings.getState()
+      agentRef.current ??= createDemoAgent(useMenuStore.getState().items, settings, openStatus(settings.hours).label)
+      const turn = agentRef.current.reply(t)
+      parts = turn.parts
+      handoff = Boolean(turn.handoff)
+      if (turn.order) {
+        order = true
+        if (repo.mode === 'local') await repo.orders.create(turn.order).catch(() => undefined)
+      }
     }
     for (const [i, p] of parts.entries()) {
       if (i > 0) setTyping(true)
@@ -67,7 +83,8 @@ export default function Test() {
       setMsgs((m) => [...m, { from: 'robo', text: p }])
       setTyping(false)
     }
-    if (order) setNotice('✅ Pedido de teste registrado. Em produção ele cairia no painel da loja.')
+    if (order) setNotice('✅ Pedido de teste registrado. No painel da loja ele aparece em Pedidos, com a etiqueta WhatsApp.')
+    else if (handoff) setNotice('🙋 O robô passou a conversa para uma pessoa e o dono recebe um aviso no WhatsApp.')
   }
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -88,7 +105,7 @@ export default function Test() {
         </div>
       </header>
       <p className="bg-[#182229] px-4 py-2 text-center text-xs text-[#8696a0]">
-        {live === false ? 'Modo demonstração: respostas simuladas. A IA de verdade fica ligada no ar com a chave configurada.' : 'Conversa de teste: nenhum pedido real é feito.'}
+        {live === false ? 'Demonstração do fluxo de atendimento. Com a IA ligada, o robô entende conversa livre, áudio e foto.' : 'Conversa de teste: nenhum pedido real é feito.'}
       </p>
       <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4" role="log" aria-live="polite" aria-label="Conversa">
         {msgs.length === 0 && (
@@ -105,7 +122,7 @@ export default function Test() {
         )}
         {msgs.map((m, i) => (
           <p key={i} className={`max-w-[82%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-[15px] leading-snug ${m.from === 'cliente' ? 'ml-auto rounded-br-sm bg-[#005c4b]' : 'rounded-bl-sm bg-[#202c33]'}`}>
-            {m.text}
+            <WaText text={m.text} />
           </p>
         ))}
         {typing && (
