@@ -7,6 +7,8 @@ import type { Category, MenuItem, NewOrder, OrderLine, PaymentMethod, StoreSetti
 
 export interface DemoTurn {
   parts: string[]
+  /** Uso interno: o atendente não entendeu a frase. */
+  fallback?: boolean
   /** Pedido confirmado pelo cliente nesta rodada. */
   order?: NewOrder
   handoff?: boolean
@@ -39,12 +41,29 @@ const CATEGORY_WORDS: [RegExp, Category][] = [
   [/combo/, 'Combos'],
 ]
 
+const DAYS: [RegExp, number, string][] = [
+  [/domingo/, 0, 'Domingo'],
+  [/segunda/, 1, 'Segunda'],
+  [/terca/, 2, 'Terça'],
+  [/quarta/, 3, 'Quarta'],
+  [/quinta/, 4, 'Quinta'],
+  [/sexta/, 5, 'Sexta'],
+  [/sabado/, 6, 'Sábado'],
+]
+
 interface Line {
   item: MenuItem
   qtd: number
 }
 
-export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openLabel = '') {
+export interface ShopInfo {
+  /** Ex.: "@moria_hamburgueria". */
+  instagram?: string
+  /** Endereço em uma linha. */
+  address?: string
+}
+
+export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openLabel = '', shop: ShopInfo = {}) {
   const available = menu.filter((m) => m.disponivel)
   let stage: Stage = 'livre'
   let cart: Line[] = []
@@ -55,6 +74,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
   let troco = ''
   let upsold = false
   let awaitingTroco = false
+  let misses = 0
 
   const fee = settings.deliveryFee.mode === 'fixed' ? settings.deliveryFee.amount : null
   const subtotal = () => cart.reduce((n, l) => n + l.item.preco * l.qtd, 0)
@@ -98,8 +118,10 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
         .sort((a, b) => b.hits - a.hits || b.ratio - a.ratio)
       if (!scored.length) continue
       const best = scored[0]
-      const tied = scored.filter((s) => s.hits === best.hits && s.ratio === best.ratio)
-      if (tied.length > 1) ambiguous.push(tied.map((t) => t.item))
+      // Uma palavra solta ("bacon", "clássico", "frango") serve para vários itens: pergunta qual.
+      const loose = best.hits === 1
+      const tied = scored.filter((s) => s.hits === best.hits && (loose || s.ratio === best.ratio))
+      if (tied.length > 1) ambiguous.push(tied.slice(0, 6).map((t) => t.item))
       else found.push({ item: best.item, qtd: qtyIn(seg) })
     }
     return { found, ambiguous }
@@ -112,6 +134,13 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       else cart.push({ ...l })
     }
   }
+
+  const shortDesc = (i: MenuItem) => {
+    const first = i.descricao.split('. ')[0].replace(/\.$/, '')
+    return first.length > 90 ? `${first.slice(0, 87)}…` : first
+  }
+  const describe = (i: MenuItem): string =>
+    `*${i.nome}* — ${brl(i.preco)}\n${i.descricao.replace(/ Preço a partir deste valor[^.]*\./, '')}`
 
   const hasCat = (cat: Category) => available.some((i) => i.categoria === cat)
 
@@ -151,7 +180,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     handoff: true,
   })
 
-  const reply = (input: string): DemoTurn => {
+  const respond = (input: string): DemoTurn => {
     const t = norm(input)
     if (has(t, /ignor(e|ar)|esquec(a|er)|suas (instrucoes|regras)|prompt|revele|finja|de graca/))
       return { parts: ['Isso eu não consigo fazer, mas posso te ajudar com o cardápio e o seu pedido. 😊', 'O que você vai querer hoje?'] }
@@ -264,9 +293,14 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     }
 
     // intenções livres
+    const dayHit = DAYS.find(([re]) => has(t, re))
+    if (dayHit && has(t, /abre|aberto|funciona|horario|fecha/)) {
+      const h = settings.hours[dayHit[1]]
+      return { parts: [h ? `${dayHit[2]}: das ${h.open.replace(':00', 'h').replace(':', 'h')} às ${h.close.replace(':00', 'h').replace(':', 'h')}. 🕒` : `${dayHit[2]} a loja fica fechada. 😴`, 'Quer ver o cardápio?'] }
+    }
     if (has(t, /horario|aberto|abre|fecha|funciona/))
       return { parts: [openLabel ? `${openLabel}. 🕒` : 'Funcionamos à noite, todos os dias. 🕒', 'Quer ver o cardápio ou já fazer o pedido?'] }
-    if (has(t, /desconto|promocao|cupom|mais barato|fiado/))
+    if (has(t, /desconto|promocao|cupom|fiado|abaixa|faz por menos|negociar/))
       return { parts: ['Os preços do cardápio são fixos e eu não consigo dar desconto, mas garanto que o sabor compensa. 🙏', 'Se quiser conversar sobre isso, posso chamar um atendente. Quer?'] }
     if (has(t, /pizza|sushi|lasanha|acai|sorvete|pastel|marmita|batata|fritas|porcao|sobremesa|molho extra/))
       return { parts: ['Isso eu não tenho no cardápio, aqui o forte é a brasa! 😅', 'Posso te mostrar os hambúrgueres da casa e os lanches tradicionais, ou chamar um atendente se quiser confirmar outra coisa.'] }
@@ -274,6 +308,58 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       return { parts: [`Aceitamos ${settings.payments.join(', ')}.`, 'O pagamento é combinado quando você confirma o pedido.'] }
     if (has(t, /entrega|taxa|frete/) && !cart.length)
       return { parts: [fee === null ? 'A taxa de entrega depende do endereço e eu confirmo com a equipe.' : `A taxa de entrega é ${brl(fee)}. Retirada no local é sem taxa.`] }
+
+    if (has(t, /barato|em conta|economic|menor preco/)) {
+      const cheap = [...available].filter((i) => i.categoria !== 'Bebidas').sort((a, b) => a.preco - b.preco).slice(0, 4)
+      return { parts: [`Os mais em conta hoje:\n${cheap.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')}`, 'Quer que eu anote algum?'] }
+    }
+    if (has(t, /crianc|kids|filho|filha|pequen/)) {
+      const kids = available.find((i) => /kids/.test(norm(i.nome)))
+      if (kids) return { parts: ['Para os pequenos temos o lanche kids! 🧒', describe(kids), 'Quer que eu anote?'] }
+    }
+    const taste = has(t, /picante|apimentad|pimenta|ardid/) ? /pimenta|picante|apimentad/ : has(t, /doce|docinho|adocicad/) ? /mel |abacaxi/ : has(t, /grande|bem servido|muita fome|matar a fome|maior/) ? /tres hamburgueres|2 hamburgueres|3 hamburgueres/ : null
+    if (taste && !has(t, /quero (um|uma|dois|duas)/)) {
+      const hits = available
+        .filter((i) => taste.test(norm(i.descricao)) && i.categoria !== 'Bebidas')
+        .sort((a, b) => Number(norm(b.descricao).includes('pimenta')) - Number(norm(a.descricao).includes('pimenta')))
+        .slice(0, 4)
+      if (hits.length) return { parts: [`Pra esse gosto eu indico:\n${hits.map((i) => `- *${i.nome}* (${brl(i.preco)}): ${shortDesc(i)}`).join('\n')}`, 'Qual chamou a atenção?'] }
+    }
+    if (has(t, /combo/) && !hasCat('Combos'))
+      return { parts: ['Combos prontos eu não tenho, mas você monta o seu: lanche + bebida, e eu somo tudo. 😉', 'O que vai querer de lanche?'] }
+    if (has(t, /alergi|gluten|lactose|intoleran|celiac|restricao alimentar/))
+      return { parts: ['Alergia e restrição alimentar são coisa séria, então não vou arriscar. 🙏', 'Vou chamar um atendente da casa para te responder com segurança.'], handoff: true }
+    if (has(t, /vegetar|vegan|sem carne|plant based/)) {
+      const veg = available.filter((i) => /vegetar|vegano|grao de bico|veggie/.test(norm(`${i.nome} ${i.descricao}`)))
+      if (!veg.length) return { parts: ['No cardápio de hoje eu não tenho opção vegetariana. 😕', 'Quer que eu chame um atendente para ver se dá para adaptar algum lanche?'] }
+      return { parts: [`Tenho estas opções:\n${veg.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')}`, 'Quer pedir alguma?'] }
+    }
+    if (has(t, /\b(site|instagram|insta|rede social|perfil)\b/))
+      return { parts: ['Você já está no site da Moriá! 😄', shop.instagram ? `E no Instagram ${shop.instagram} a gente mostra as novidades e as fotos dos lanches.` : 'Se quiser fazer o pedido agora, é só me dizer o que vai querer.'] }
+    if (has(t, /onde (fica|voces|e a loja)|endereco|localiza|como chegar/))
+      return { parts: [`Ficamos em ${shop.address ?? 'Rio Verde de Mato Grosso/MS'}. 📍`, 'Dá pra pedir entrega ou retirar aqui. Quer ver o cardápio?'] }
+    if (has(t, /telefone|contato|numero (da|de) (voces|loja)/))
+      return { parts: ['Você já está no atendimento do WhatsApp da Moriá. 😊', 'Pode pedir por aqui mesmo: me diz o que vai querer.'] }
+    if (has(t, /demora|prazo|quanto tempo|tempo de entrega|chega quando|delivery/))
+      return { parts: ['O tempo depende do movimento da cozinha. ⏱️', 'A loja confirma o prazo assim que recebe o seu pedido.'] }
+    if (has(t, /recomend|sugest|indica|qual (o )?melhor|(o )?que (voce|vc|tu) (acha|sugere|indica|recomenda)|mais (gostoso|vendido|pedido|famoso)|que (eu )?(peco|pedir|comer)|nao sei (o que|qual)|em duvida|escolher/)) {
+      const picks = available.filter((i) => i.destaque && i.categoria !== 'Bebidas').slice(0, 3)
+      const list = (picks.length ? picks : available.filter((i) => i.categoria !== 'Bebidas').slice(0, 3)).map((i) => `- *${i.nome}* (${brl(i.preco)}): ${shortDesc(i)}`)
+      return { parts: ['Boa pergunta! Esses são os destaques da casa: 🔥', list.join('\n'), 'Você curte mais um lanche clássico, um com bacon ou algo diferente, com geleia? Me diz que eu monto o pedido.'] }
+    }
+    if (has(t, /obrigad|valeu|vlw|brigad/) && stage === 'livre') return { parts: ['Por nada! 😊 Qualquer coisa é só chamar.', 'Quando bater a fome, é só me dizer o que vai querer. 🔥'] }
+    if (has(t, /\b(tchau|ate (mais|logo)|flw|falou)\b/) && stage === 'livre') return { parts: ['Até mais! 🔥 Volta quando bater a fome.'] }
+    if (has(t, /o que (vem|tem|leva)|ingrediente|como (e|eh)\b|de que (e|eh)|descri|quanto (custa|e|eh|sai)|preco|valor|vem com|tamanho|gramas?/)) {
+      const hit = findItems(input).found[0]
+      if (hit) return { parts: [describe(hit.item), 'Quer que eu anote?'] }
+    }
+    if (has(t, /^(voces |vcs )?(tem|temos|vende|vendem|faz|fazem)\b/) && !has(t, /quero|vou querer/)) {
+      const { found, ambiguous } = findItems(input)
+      const all = [...found.map((f) => f.item), ...ambiguous.flat()]
+      if (all.length) return { parts: [`Tem sim! 😋\n${all.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')}`, 'Quer que eu anote?'] }
+      for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Tem sim! Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
+      return { parts: ['Esse eu não tenho no cardápio. 😅', 'Quer ver os hambúrgueres da casa ou os lanches tradicionais?'] }
+    }
 
     const { found, ambiguous } = findItems(input)
     if (found.length || ambiguous.length) {
@@ -302,9 +388,19 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (cart.length && has(t, /so isso|so|nada|fecha|pode fechar|mais nada|e isso|nao quero mais|finalizar/)) return { parts: askNext() }
     if (cart.length && stage === 'livre' && has(t, /\b(sim|quero|pode|bora)\b/)) return { parts: askNext() }
     if (has(t, /cade|status|meu pedido/)) return { parts: ['Você ainda não tem pedido por aqui. Quer fazer um agora? 😊'] }
-    if (has(t, /\b(oi|ola|bom dia|boa tarde|boa noite|e ai|eae|opa)\b/) || !cart.length)
-      return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio ou já anotar seu pedido. O que você tá com vontade?'] }
-    return { parts: ['Eita, essa eu não peguei. 😅 Me diz o que você quer comer, ou pede o cardápio que eu mostro.'] }
+    if (has(t, /\b(oi|ola|bom dia|boa tarde|boa noite|e ai|eae|opa|salve)\b/))
+      return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio, recomendar um lanche ou já anotar seu pedido. O que você tá com vontade?'] }
+    return misses >= 1
+      ? { parts: ['Hmm, essa ainda eu não consegui responder. 😅', 'Quer que eu chame um atendente da casa? Ou, se preferir, me diz o que quer comer que eu anoto.'], fallback: true }
+      : { parts: ['Eita, essa eu não peguei direito. 😅', 'Posso te mostrar o cardápio, recomendar um lanche ou anotar seu pedido. O que prefere?'], fallback: true }
+  }
+
+  const reply = (input: string): DemoTurn => {
+    const turn = respond(input)
+    misses = turn.fallback ? misses + 1 : 0
+    const { fallback: _f, ...clean } = turn
+    void _f
+    return clean
   }
 
   return { reply }

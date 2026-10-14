@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Logo } from '@/components/Logo'
 import { WaText } from '@/components/WaText'
-import { config } from '@/lib/config'
+import { config, fullAddress } from '@/lib/config'
 import { repo } from '@/lib/data'
 import { createDemoAgent } from '@/lib/demoAgent'
 import { openStatus } from '@/lib/hours'
@@ -67,7 +67,7 @@ export default function Test() {
       await wait(600)
       await useMenuStore.getState().load()
       const { settings } = useSettings.getState()
-      agentRef.current ??= createDemoAgent(useMenuStore.getState().items, settings, openStatus(settings.hours).label)
+      agentRef.current ??= createDemoAgent(useMenuStore.getState().items, settings, openStatus(settings.hours).label, { instagram: `@${config.instagram.handle}`, address: fullAddress() })
       const turn = agentRef.current.reply(t)
       parts = turn.parts
       handoff = Boolean(turn.handoff)
