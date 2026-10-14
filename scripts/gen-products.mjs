@@ -235,6 +235,9 @@ const files = {
   'refrigerante-lata': studio('#7a1212', can()),
   'refrigerante-1l': studio('#4a1a0e', bottle()),
   suco: studio('#7a3a0a', juice()),
+  'x-burguer': studio('#7a2a12', burger({ patty: 'beef', cheese: true })),
+  'x-bacon': studio('#7a1d12', burger({ patty: 'beef', cheese: true, bacon: true })),
+  'x-frango': studio('#7a3a12', burger({ patty: 'chicken', cheese: true })),
   frango: studio('#7a3a12', burger({ patty: 'chicken', cheese: false })),
   veggie: studio('#2a4a1a', burger({ patty: 'veggie', cheese: false })),
   'combo-classico': studio(

@@ -27,17 +27,15 @@ const near = (a: number, b: number, eps = 0.005) =>
 // custo unitário = preço ÷ quantidade
 near(unitCost({ preco_compra: 130, qtd_compra: 20 }), 6.5)
 
-// Moriá Clássico: blend 6,50 + pão 1,75 + queijo 0,90 + alface 0,24 + tomate 0,21 + molho 0,54 + emb 0,85 + sacola 0,20
+// Bacon Supremo 1.0: blend 5,00 + pão 1,375 + emb 0,85 + sacola 0,20 + bacon 1,44 + cheddar 1,52 + maionese 0,35 + rúcula 0,75 + tomate 0,21 + cebola 0,15
 const h1 = itemCost('h1', ctx)
 assert.ok(h1.complete)
-near(h1.cost, 6.5 + 1.75 + 0.9 + 0.24 + 0.21 + 0.54 + 0.85 + 0.2, 0.01)
+near(h1.cost, 5 + 1.375 + 0.85 + 0.2 + 1.44 + 1.52 + 0.35 + 0.75 + 0.21 + 0.15, 0.01)
 
-// combo = soma dos componentes
-const c1 = itemCost('c1', ctx)
-near(
-  c1.cost,
-  itemCost('h1', ctx).cost + itemCost('a1', ctx).cost + itemCost('d1', ctx).cost,
-)
+// combo = soma dos componentes (o cardápio real não tem combo; este é montado só para o teste)
+const comboRecipe = { item_id: 'combo-x', linhas: [{ tipo: 'item' as const, ref: 't4', qtd: 1 }, { tipo: 'item' as const, ref: 'd1', qtd: 2 }] }
+const comboCtx = buildContext(seedIngredients, [...seedRecipes, comboRecipe])
+near(itemCost('combo-x', comboCtx).cost, itemCost('t4', ctx).cost + 2 * itemCost('d1', ctx).cost)
 
 // item sem ficha → incompleto
 assert.equal(itemCost('nao-existe', ctx).complete, false)
@@ -148,11 +146,9 @@ assert.ok(lowStock(seedIngredients).some((i) => i.id === 'i-bacon'))
   const huge = applyStock(seedIngredients, new Map([[before[0].id, 1e9]]), -1)
   assert.equal(huge[0].estoque, 0)
   // combo soma os itens
-  const combo = seedRecipes.find((x) => x.linhas.some((l) => l.tipo === 'item'))
-  if (combo) {
-    const cu = orderIngredientUse({ itens: [{ item_id: combo.item_id, nome: 'Combo', qtd: 1, preco: 1, adicionais: [], obs: '' }] }, seedRecipes)
-    assert.deepEqual(cu.semFicha, [])
-    assert.ok(cu.use.size > 0)
-  }
+  const cu = orderIngredientUse({ itens: [{ item_id: 'combo-x', nome: 'Combo', qtd: 1, preco: 1, adicionais: [], obs: '' }] }, [...seedRecipes, comboRecipe])
+  assert.deepEqual(cu.semFicha, [])
+  near(cu.use.get('i-lata') ?? 0, 2)
+  near(cu.use.get('i-bacon') ?? 0, 30)
 }
 console.log('finance: tudo certo')

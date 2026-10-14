@@ -14,7 +14,7 @@ export const reviews: Review[] = [
     id: 'r2',
     nome: 'Cliente Exemplo 2',
     texto:
-      'A baguete de costela é absurda de boa. Pedi pelo WhatsApp e chegou rápido e quentinho.',
+      'O Pineapple Cheese é absurdo de bom. Pedi pelo WhatsApp e chegou rápido e quentinho.',
     nota: 5,
     origem: 'WhatsApp',
   },
@@ -30,7 +30,7 @@ export const reviews: Review[] = [
     id: 'r4',
     nome: 'Cliente Exemplo 4',
     texto:
-      'Batata com cheddar e bacon é obrigatória. Preço justo pela qualidade que entregam.',
+      'O Bacon Supremo é obrigatório. Preço justo pela qualidade que entregam.',
     nota: 4,
     origem: 'Instagram',
   },

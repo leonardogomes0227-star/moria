@@ -34,6 +34,7 @@ export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
   const category = useMenuStore((s) => s.category)
   const setCategory = useMenuStore((s) => s.setCategory)
   const [query, setQuery] = useState('')
+  const categories = items.length ? CATEGORIES.filter((c) => items.some((i) => i.categoria === c)) : CATEGORIES
 
   const searching = query.trim().length > 0
   const visible = useMemo(() => {
@@ -57,7 +58,7 @@ export function Menu({ items, loading, degraded, reload, onOpen }: MenuProps) {
             aria-label="Categorias"
             className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1 md:flex-1"
           >
-            {CATEGORIES.map((c) => {
+            {categories.map((c) => {
               const active = !searching && c === category
               return (
                 <button

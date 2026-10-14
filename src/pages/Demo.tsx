@@ -114,7 +114,7 @@ export default function Demo() {
           icon={<BotIcon size={28} />}
           title="O robô de atendimento"
           subtitle="Atende o cliente no WhatsApp e anota o pedido sozinho."
-          todo={['Peça “um hambúrguer com batata e Coca”.', 'Tente pedir desconto ou um item que não existe: ele não inventa.', 'Peça para falar com uma pessoa e veja o robô passar o atendimento.']}
+          todo={['Peça “um X-Bacon e uma Coca”.', 'Tente pedir desconto ou um item que não existe: ele não inventa.', 'Peça para falar com uma pessoa e veja o robô passar o atendimento.']}
           extra={<p className="text-xs text-muted">Aqui você vê o fluxo de atendimento. Com a IA ligada, ele também entende conversa livre, áudio e foto.</p>}
           action={
             <Button href="/teste" magnetic>

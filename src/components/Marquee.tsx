@@ -1,8 +1,8 @@
 const WORDS = [
   'Defumado na brasa',
-  'Baguetes exclusivas',
-  'Molho artesanal',
-  'Carnes selecionadas',
+  'Brioche selado',
+  'Geleias artesanais',
+  'Hambúrguer de 160g',
   'Peça pelo WhatsApp',
 ]
 

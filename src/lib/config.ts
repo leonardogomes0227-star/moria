@@ -28,7 +28,7 @@ export const config = {
   shortName: 'Moriá',
   slogan: 'O autêntico sabor defumado em Rio Verde de MS',
   description:
-    'Hambúrguer artesanal defumado em Rio Verde de Mato Grosso (MS). Baguetes exclusivas, molho artesanal e carnes selecionadas. Peça direto pelo WhatsApp.',
+    'Hambúrguer artesanal defumado em Rio Verde de Mato Grosso (MS). Hambúrgueres de 160g assados na brasa, brioche selado na manteiga e lanches tradicionais. Peça direto pelo WhatsApp.',
   siteUrl: 'https://moria-hamburgueria.vercel.app', // EDITAR: domínio final
   timezone: 'America/Campo_Grande',
   currency: 'BRL',

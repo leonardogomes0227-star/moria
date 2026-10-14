@@ -1,5 +1,6 @@
 export const CATEGORIES = [
   'Hambúrgueres',
+  'Tradicionais',
   'Baguetes',
   'Acompanhamentos',
   'Molhos',

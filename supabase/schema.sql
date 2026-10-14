@@ -6,7 +6,7 @@
 create table if not exists public.menu_items (
   id          uuid primary key default gen_random_uuid(),
   categoria   text not null check (categoria in
-              ('Hambúrgueres','Baguetes','Acompanhamentos','Molhos','Bebidas','Combos')),
+              ('Hambúrgueres','Tradicionais','Baguetes','Acompanhamentos','Molhos','Bebidas','Combos')),
   nome        text not null check (char_length(nome) between 1 and 120),
   descricao   text not null default '',
   preco       numeric(10,2) not null check (preco >= 0),
@@ -17,6 +17,11 @@ create table if not exists public.menu_items (
   ordem       integer not null default 0,
   created_at  timestamptz not null default now()
 );
+
+-- Para quem já tinha a tabela: libera a categoria "Tradicionais".
+alter table public.menu_items drop constraint if exists menu_items_categoria_check;
+alter table public.menu_items add constraint menu_items_categoria_check check (categoria in
+  ('Hambúrgueres','Tradicionais','Baguetes','Acompanhamentos','Molhos','Bebidas','Combos'));
 
 create index if not exists menu_items_ordem_idx on public.menu_items (ordem);
 

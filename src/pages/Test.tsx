@@ -14,7 +14,7 @@ interface Msg {
   text: string
 }
 
-const SUGGESTIONS = ['Oi, qual o horário?', 'Quero ver o cardápio', 'Quero um hambúrguer com batata e Coca', 'Quero falar com uma pessoa']
+const SUGGESTIONS = ['Oi, qual o horário?', 'Quero ver o cardápio', 'Quero um X-Bacon e uma Coca', 'Quero falar com uma pessoa']
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const typingMs = (t: string) => Math.min(2200, Math.max(700, t.length * 22))
 

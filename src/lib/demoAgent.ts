@@ -16,21 +16,22 @@ type Stage = 'livre' | 'tipo' | 'nome' | 'endereco' | 'pagamento' | 'confirmar' 
 
 const brl = (n: number) => `R$ ${n.toFixed(2).replace('.', ',')}`
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+const flat = (s: string) => norm(s).replace(/[-_]/g, ' ')
 const has = (t: string, re: RegExp) => re.test(t)
 
 const NUMBERS: Record<string, number> = { um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5 }
-const STOP = new Set(['de', 'da', 'do', 'com', 'e', 'moria', 'baguete', 'defumado', 'defumada', 'natural', 'lata', '1l', '400ml'])
+const STOP = new Set(['de', 'da', 'do', 'com', 'e', 'moria', 'burguer', 'burger', 'cola', 'lata', '1l', '2l', '350ml'])
 
 /** Apelidos que o cliente usa no dia a dia → palavra-chave do item. */
 const ALIASES: [RegExp, string][] = [
-  [/\b(xb|x-?burger|x-?salada|hamburguer|burguer|burger|lanche)\b/, 'classico'],
-  [/\b(coca|coca-?cola|refri|refrigerante|guarana|fanta|pepsi)\b/, 'refrigerante lata'],
-  [/\b(batata|fritas)\b/, 'batata frita'],
-  [/\bsuco\b/, 'suco'],
+  [/\b(xb|x-?burguer|x-?burger|xis)\b/, 'x burguer'],
+  [/\b(coca|cocacola|coca-?cola)\b.*\b(2 ?l|2 litros|dois litros|2lt)\b/, 'coca-cola 2l'],
+  [/\b(coca|cocacola|coca-?cola)\b/, 'coca-cola 350ml'],
 ]
 
 const CATEGORY_WORDS: [RegExp, Category][] = [
-  [/hamburguer|burger|lanche/, 'Hambúrgueres'],
+  [/hamburguer|burger|burguer|gourmet|brasa|artesanal/, 'Hambúrgueres'],
+  [/tradicion|prensado|lanche|x-|xis/, 'Tradicionais'],
   [/baguete/, 'Baguetes'],
   [/batata|acompanh|porcao|cebola/, 'Acompanhamentos'],
   [/molho/, 'Molhos'],
@@ -65,7 +66,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     cart.map((l) => `- ${l.qtd}x ${l.item.nome} — ${brl(l.item.preco * l.qtd)}`).join('\n')
 
   const qtyIn = (seg: string): number => {
-    const m = seg.match(/\b(\d{1,2})\s*x?\b/)
+    const m = seg.match(/\b(\d{1,2})\s*x?\b(?!\s*(l\b|lt\b|litros?|ml))/)
     if (m) return Math.min(10, Math.max(1, Number(m[1])))
     for (const [w, n] of Object.entries(NUMBERS)) if (new RegExp(`\\b${w}\\b`).test(seg)) return n
     return 1
@@ -78,14 +79,19 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     for (const raw of text.split(/,| e | com |\+| mais | e tambem /)) {
       let seg = norm(raw)
       if (!seg.trim()) continue
-      for (const [re, key] of ALIASES) if (re.test(seg)) seg += ` ${key}`
+      for (const [re, key] of ALIASES) {
+        if (re.test(seg)) {
+          seg += ` ${key}`
+          break
+        }
+      }
       const scored = available
         .map((item) => {
           const tokens = norm(item.nome)
             .split(/[^a-z0-9]+/)
             .filter((t) => t.length > 2 && !STOP.has(t))
           // Nome completo dito pelo cliente (ou pelo apelido) vale mais que palavras soltas.
-          const hits = tokens.filter((t) => seg.includes(t)).length + (seg.includes(norm(item.nome)) ? 10 : 0)
+          const hits = tokens.filter((t) => seg.includes(t)).length + (flat(seg).includes(flat(item.nome)) ? 10 : 0)
           return { item, hits, ratio: tokens.length ? hits / tokens.length : 0 }
         })
         .filter((s) => s.hits > 0)
@@ -107,20 +113,21 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     }
   }
 
+  const hasCat = (cat: Category) => available.some((i) => i.categoria === cat)
+
   const listCategory = (cat: Category): string => {
-    const items = available.filter((i) => i.categoria === cat).slice(0, 6)
-    return items.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')
+    const all = available.filter((i) => i.categoria === cat)
+    const shown = all.slice(0, 10).map((i) => `- ${i.nome} — ${brl(i.preco)}`)
+    if (all.length > shown.length) shown.push(`…e mais ${all.length - shown.length} opções`)
+    return shown.join('\n')
   }
 
   const upsell = (): string | null => {
     if (upsold) return null
     upsold = true
-    const hasDrink = cart.some((l) => l.item.categoria === 'Bebidas')
-    const hasSide = cart.some((l) => l.item.categoria === 'Acompanhamentos')
-    if (!hasDrink && !hasSide) return 'Quer acompanhar com uma batata crocante e uma bebida gelada? Combina demais com a fumaça. 🍟'
-    if (!hasDrink) return 'Vai querer uma bebida pra acompanhar?'
-    if (!hasSide) return 'Que tal uma batata crocante pra completar?'
-    return null
+    const drinks = available.filter((i) => i.categoria === 'Bebidas')
+    if (!drinks.length || cart.some((l) => l.item.categoria === 'Bebidas')) return null
+    return `Vai querer uma bebida gelada pra acompanhar? Temos ${drinks.map((d) => d.nome).join(', ')}. 🥤`
   }
 
   const askNext = (): string[] => {
@@ -261,8 +268,8 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       return { parts: [openLabel ? `${openLabel}. 🕒` : 'Funcionamos à noite, todos os dias. 🕒', 'Quer ver o cardápio ou já fazer o pedido?'] }
     if (has(t, /desconto|promocao|cupom|mais barato|fiado/))
       return { parts: ['Os preços do cardápio são fixos e eu não consigo dar desconto, mas garanto que o sabor compensa. 🙏', 'Se quiser conversar sobre isso, posso chamar um atendente. Quer?'] }
-    if (has(t, /pizza|sushi|lasanha|acai|sorvete|pastel|marmita/))
-      return { parts: ['Pizza e esses outros a gente não tem, aqui o forte é a brasa! 😅', 'Nossos hambúrgueres defumados são a especialidade. Quer ver os mais pedidos?'] }
+    if (has(t, /pizza|sushi|lasanha|acai|sorvete|pastel|marmita|batata|fritas|porcao|sobremesa|molho extra/))
+      return { parts: ['Isso eu não tenho no cardápio, aqui o forte é a brasa! 😅', 'Posso te mostrar os hambúrgueres da casa e os lanches tradicionais, ou chamar um atendente se quiser confirmar outra coisa.'] }
     if (has(t, /pix|pagamento|cartao|aceita|forma de pag/) && !cart.length)
       return { parts: [`Aceitamos ${settings.payments.join(', ')}.`, 'O pagamento é combinado quando você confirma o pedido.'] }
     if (has(t, /entrega|taxa|frete/) && !cart.length)
@@ -286,11 +293,11 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     }
 
     if (has(t, /cardapio|menu|opcoes|o que tem|que voces tem|indica|sugest/)) {
-      for (const [re, cat] of CATEGORY_WORDS) if (has(t, re)) return { parts: [`Nossos ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual chamou a atenção?'] }
+      for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual chamou a atenção?'] }
       const star = available.find((i) => i.destaque) ?? available[0]
-      return { parts: ['Temos hambúrgueres defumados, baguetes, acompanhamentos, molhos, bebidas e combos. 🍔', `O mais pedido é o *${star.nome}* (${brl(star.preco)}). Quer começar por ele ou ver outra categoria?`] }
+      return { parts: ['Temos os hambúrgueres da casa (assados na brasa), os lanches tradicionais (os X-) e bebidas. 🍔', `O mais pedido é o *${star.nome}* (${brl(star.preco)}). Quer começar por ele ou ver outra categoria?`] }
     }
-    for (const [re, cat] of CATEGORY_WORDS) if (has(t, re)) return { parts: [`Nossos ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
+    for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
 
     if (cart.length && has(t, /so isso|so|nada|fecha|pode fechar|mais nada|e isso|nao quero mais|finalizar/)) return { parts: askNext() }
     if (cart.length && stage === 'livre' && has(t, /\b(sim|quero|pode|bora)\b/)) return { parts: askNext() }

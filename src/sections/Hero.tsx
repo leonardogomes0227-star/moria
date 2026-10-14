@@ -78,7 +78,7 @@ export function Hero() {
             style={stagger(2)}
             className="mx-auto mt-6 max-w-xl animate-fade-up text-lg text-white/85 lg:mx-0 lg:text-xl"
           >
-            Baguetes exclusivas, molho artesanal e carnes selecionadas, direto da brasa de
+            Hambúrgueres de 160g assados na brasa, no pão brioche selado, direto de
             Rio Verde de MS. Monte o pedido em 1 minuto e envie pelo WhatsApp.
           </p>
           <div

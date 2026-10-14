@@ -6,18 +6,18 @@ import { SpotlightCard } from '@/components/SpotlightCard'
 
 const items: { title: string; text: string; icon: ReactNode }[] = [
   {
-    title: 'Baguetes exclusivas',
-    text: 'Pão crocante por fora, macio por dentro, com recheios que você só encontra aqui.',
+    title: 'Brioche selado',
+    text: 'Pão brioche macio, selado na manteiga, para segurar toda a suculência do hambúrguer.',
     icon: <BreadIcon size={34} />,
   },
   {
-    title: 'Molho artesanal',
-    text: 'Receita da casa, preparada todo dia, com toque defumado que assina cada pedido.',
+    title: 'Molhos e geleias da casa',
+    text: 'Maionese especial, barbecue e geleias artesanais de pimenta e abacaxi que fazem a diferença.',
     icon: <SauceIcon size={34} />,
   },
   {
-    title: 'Carnes selecionadas',
-    text: 'Cortes escolhidos a dedo e preparados na brasa para chegar no ponto perfeito.',
+    title: 'Assado na brasa',
+    text: 'Hambúrguer de 160g assado na brasa, suculento e com sabor defumado.',
     icon: <MeatIcon size={34} />,
   },
 ]

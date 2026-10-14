@@ -31,39 +31,43 @@ const pickWeighted = (r: () => number, entries: [string, number][]): string => {
 }
 
 const MAINS: [string, number][] = [
-  ['h1', 18],
-  ['h2', 14],
-  ['h3', 9],
-  ['h4', 7],
-  ['h5', 6],
-  ['h6', 2],
-  ['b1', 8],
-  ['b2', 4],
-  ['b3', 4],
-  ['b4', 5],
+  ['h8', 14],
+  ['h1', 12],
+  ['h2', 9],
+  ['h3', 8],
+  ['h10', 7],
+  ['h7', 6],
+  ['h9', 5],
+  ['h4', 4],
+  ['h5', 4],
+  ['h14', 4],
+  ['h12', 3],
+  ['h11', 3],
+  ['h13', 3],
+  ['h6', 3],
+  ['h17', 3],
+  ['h15', 2],
+  ['h16', 2],
 ]
-const COMBOS: [string, number][] = [
-  ['c1', 10],
-  ['c2', 4],
-  ['c3', 4],
-]
-const SIDES: [string, number][] = [
-  ['a1', 10],
-  ['a2', 9],
-  ['a3', 4],
+const TRADICIONAIS: [string, number][] = [
+  ['t4', 12],
+  ['t2', 10],
+  ['t1', 8],
+  ['t8', 8],
+  ['t6', 7],
+  ['t3', 6],
+  ['t5', 5],
+  ['t9', 4],
+  ['t7', 3],
+  ['t10', 4],
 ]
 const DRINKS: [string, number][] = [
   ['d1', 16],
-  ['d2', 6],
-  ['d3', 5],
-]
-const SAUCES: [string, number][] = [
-  ['m1', 3],
-  ['m2', 3],
-  ['m3', 3],
+  ['d2', 8],
+  ['d3', 6],
 ]
 
-const ORDERS_PER_DAY = [22, 0, 14, 15, 19, 31, 38] // domingo..sábado (segunda fechada)
+const ORDERS_PER_DAY = [30, 0, 19, 21, 26, 42, 50] // domingo..sábado (segunda fechada)
 
 function line(item: MenuItem, qtd: number, r: () => number): OrderLine {
   const addon =
@@ -101,15 +105,11 @@ export function buildDemoOrders(now = Date.now()): Order[] {
       if (when > now - 20 * 60_000) continue
 
       const itens: OrderLine[] = []
-      if (r() < 0.25) {
-        itens.push(line(byId.get(pickWeighted(r, COMBOS))!, 1, r))
-      } else {
-        itens.push(line(byId.get(pickWeighted(r, MAINS))!, 1, r))
-        if (r() < 0.3) itens.push(line(byId.get(pickWeighted(r, MAINS))!, 1, r))
-        if (r() < 0.45) itens.push(line(byId.get(pickWeighted(r, SIDES))!, 1, r))
-        if (r() < 0.55) itens.push(line(byId.get(pickWeighted(r, DRINKS))!, 1, r))
-        if (r() < 0.15) itens.push(line(byId.get(pickWeighted(r, SAUCES))!, 1, r))
-      }
+      // Cerca de 4 em cada 10 pedidos são dos lanches tradicionais (mais baratos); o resto, hambúrgueres da casa.
+      const pool = r() < 0.4 ? TRADICIONAIS : MAINS
+      itens.push(line(byId.get(pickWeighted(r, pool))!, 1, r))
+      if (r() < 0.3) itens.push(line(byId.get(pickWeighted(r, pool))!, 1, r))
+      if (r() < 0.6) itens.push(line(byId.get(pickWeighted(r, DRINKS))!, 1, r))
       const delivery = r() < 0.7
       const subtotal = itens.reduce((s, l) => s + l.preco * l.qtd, 0)
       const entrega = delivery ? 5 : 0
@@ -141,13 +141,13 @@ export function buildDemoOrders(now = Date.now()): Order[] {
     delivery: boolean
     origem: Order['origem']
   }[] = [
-    { ago: 4, status: 'novo', ids: ['h2', 'a1'], delivery: true, origem: 'site' },
-    { ago: 9, status: 'novo', ids: ['c1'], delivery: false, origem: 'whatsapp' },
-    { ago: 21, status: 'preparo', ids: ['b1', 'd1'], delivery: true, origem: 'site' },
+    { ago: 4, status: 'novo', ids: ['h2', 'd1'], delivery: true, origem: 'site' },
+    { ago: 9, status: 'novo', ids: ['t4', 'd1'], delivery: false, origem: 'whatsapp' },
+    { ago: 21, status: 'preparo', ids: ['h3', 'd1'], delivery: true, origem: 'site' },
     {
       ago: 38,
       status: 'entrega',
-      ids: ['h1', 'h3', 'a2'],
+      ids: ['h1', 'h10', 'd2'],
       delivery: true,
       origem: 'site',
     },

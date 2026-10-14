@@ -18,7 +18,8 @@ const info = (patch: Partial<StoreInfo> = {}): StoreInfo => ({
   timezone: 'America/Campo_Grande',
   settings: { ...defaultSettings, minOrder: 0 },
   bot: { ...defaultBotSettings, ativo: true },
-  menu: menuItems,
+  // o cardápio real não tem adicionais; um item de teste ganha um para exercitar essa validação
+  menu: menuItems.map((m) => (m.id === 'h2' ? { ...m, adicionais: [{ nome: 'Bacon crocante', preco: 5 }] } : m)),
   open: true,
   ...patch,
 })
@@ -36,7 +37,7 @@ function memoryStore(i: StoreInfo) {
     },
     ordersOf: async (phone) => {
       asked.push(phone)
-      return [{ numero: 7, status: 'preparo', tipo: 'entrega', total: 33, criado_em: new Date().toISOString(), cliente_nome: 'Ana', endereco: 'Rua das Flores, 10', itens: [{ nome: 'Moriá Clássico', qtd: 1, preco: 28, adicionais: [], obs: '' }] }]
+      return [{ numero: 7, status: 'preparo', tipo: 'entrega', total: 33, criado_em: new Date().toISOString(), cliente_nome: 'Ana', endereco: 'Rua das Flores, 10', itens: [{ nome: 'Clássico Moriá', qtd: 1, preco: 28, adicionais: [], obs: '' }] }]
     },
     requestHuman: async (phone, _name, reason) => {
       humans.push({ phone, reason })
@@ -70,7 +71,7 @@ const base = { phone: '5567991110001', customerName: 'Maria', now: new Date('202
 const goodOrder = {
   itens: [
     { item_id: 'h2', quantidade: 1, adicionais: ['Bacon crocante'], observacao: 'sem cebola', preco: 1 /* ignorado */ },
-    { item_id: 'a1', quantidade: 2 },
+    { item_id: 'd1', quantidade: 2 },
   ],
   tipo: 'entrega',
   nome_cliente: 'Maria',
@@ -83,7 +84,7 @@ const goodOrder = {
   const a = buildSystemPrompt(info())
   const b = buildSystemPrompt(info())
   assert.equal(a, b)
-  assert.ok(a.includes('[h1] Moriá Clássico — R$ 28,00'))
+  assert.ok(a.includes('[h8] Clássico Moriá — R$ 28,00'))
   assert.ok(!/\d{2}:\d{2}/.test(a.split('CARDÁPIO')[0].replace(/\d{2}:\d{2}/g, '')) || true)
   assert.ok(a.includes('Pedido mínimo: sem mínimo'))
   console.log('✓ prompt estável e com cardápio')
@@ -92,13 +93,13 @@ const goodOrder = {
 // 2) fluxo completo: tool_use → criar_pedido → resposta final; preços vêm do servidor
 {
   const { store, orders } = memoryStore(info())
-  const { client, calls } = scripted([toolUse('criar_pedido', goodOrder), text('Pedido #101 confirmado! Total R$ 76,00.')])
+  const { client, calls } = scripted([toolUse('criar_pedido', goodOrder), text('Pedido #101 confirmado! Total R$ 51,00.')])
   const r = await runAgent({ ...base, client, store, text: 'confirmo' })
-  assert.equal(r.reply, 'Pedido #101 confirmado! Total R$ 76,00.')
+  assert.equal(r.reply, 'Pedido #101 confirmado! Total R$ 51,00.')
   assert.equal(orders.length, 1)
-  // h2 R$ 34 + bacon R$ 5 = 39; 2 × batata R$ 16 = 32; entrega R$ 5 → 76
-  assert.equal(orders[0].subtotal, 71)
-  assert.equal(orders[0].total, 76)
+  // h2 R$ 29 + bacon R$ 5 = 34; 2 × Coca R$ 6 = 12; entrega R$ 5 → 51
+  assert.equal(orders[0].subtotal, 46)
+  assert.equal(orders[0].total, 51)
   assert.equal(orders[0].origem, 'whatsapp')
   assert.equal(orders[0].cliente_telefone, base.phone)
   assert.deepEqual(orders[0].itens[0].adicionais, ['Bacon crocante'])
@@ -130,14 +131,14 @@ const goodOrder = {
 
 // 3) erros voltam para o modelo corrigir (item indisponível, adicional inválido, endereço)
 {
-  const i = info()
+  const i = info({ menu: info().menu.map((m) => (m.id === 'h6' ? { ...m, disponivel: false } : m)) })
   const { store, orders } = memoryStore(i)
   for (const bad of [
     { ...goodOrder, itens: [{ item_id: 'h6', quantidade: 1 }] }, // indisponível
-    { ...goodOrder, itens: [{ item_id: 'h1', quantidade: 1, adicionais: ['Trufa'] }] },
+    { ...goodOrder, itens: [{ item_id: 'h8', quantidade: 1, adicionais: ['Trufa'] }] },
     { ...goodOrder, itens: [{ item_id: 'xx', quantidade: 1 }] },
     { ...goodOrder, endereco: '' },
-    { ...goodOrder, itens: [{ item_id: 'h1', quantidade: 99 }] },
+    { ...goodOrder, itens: [{ item_id: 'h8', quantidade: 99 }] },
     { ...goodOrder, pagamento: 'Cripto' },
   ]) {
     const { client, calls } = scripted([toolUse('criar_pedido', bad), text('Ops, vou ajustar.')])
@@ -179,13 +180,13 @@ const goodOrder = {
   let s = scripted([toolUse('criar_pedido', { ...goodOrder, tipo: 'retirada', endereco: undefined }), text('ok')])
   await runAgent({ ...base, client: s.client, store: m.store, text: 'x' })
   assert.equal(m.orders[0].entrega, 0)
-  assert.equal(m.orders[0].total, 71)
+  assert.equal(m.orders[0].total, 46)
 
   m = memoryStore(info({ settings: { ...defaultSettings, deliveryFee: { mode: 'tbd' } } }))
   s = scripted([toolUse('criar_pedido', goodOrder), text('ok')])
   await runAgent({ ...base, client: s.client, store: m.store, text: 'x' })
   assert.equal(m.orders[0].entrega, null)
-  assert.equal(m.orders[0].total, 71)
+  assert.equal(m.orders[0].total, 46)
   console.log('✓ retirada sem taxa; taxa a combinar')
 }
 

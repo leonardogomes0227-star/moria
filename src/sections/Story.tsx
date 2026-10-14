@@ -17,8 +17,8 @@ const steps = [
   },
   {
     n: '03',
-    title: 'Molho artesanal',
-    text: 'Feito na casa, todo dia. É ele que amarra pão, queijo e carne.',
+    title: 'Molhos da casa',
+    text: 'Maionese especial, barbecue e geleias artesanais amarram pão, queijo e carne.',
     img: '/menu/burger-4.webp',
   },
   {

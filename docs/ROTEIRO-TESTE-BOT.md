@@ -8,8 +8,8 @@ Antes de começar: assistente ligado, cardápio com itens disponíveis, horário
 |---|---|---|---|
 | 1 | "Oi, qual o horário?" | Responder o horário real da loja, curto e simpático, e dizer se está aberta agora. | Horário errado ou inventado: revisar Loja → Horários. |
 | 2 | "Quero ver o cardápio" | Não despejar tudo. Perguntar o que o cliente curte ou mostrar uma categoria. | Textão com tudo: ajustar as regras da casa. |
-| 3 | "Quero um XB com batata e Coca" | Confirmar os itens, sugerir no máximo UMA coisa extra, e perguntar entrega ou retirada. | Item que não existe no cardápio: o nome do produto precisa ser igual ao do painel. |
-| 4 | "Troca a Coca por guaraná" e depois "tira a batata" | Ajustar o pedido sem recomeçar, e refazer o resumo com o total certo. | Total errado: conferir os preços no Cardápio. |
+| 3 | "Quero um X-Bacon e uma Coca" | Confirmar os itens, sugerir no máximo UMA coisa extra, e perguntar entrega ou retirada. | Item que não existe no cardápio: o nome do produto precisa ser igual ao do painel. |
+| 4 | "Troca a Coca por guaraná" e depois "tira o X-Bacon e põe um Clássico Moriá" | Ajustar o pedido sem recomeçar, e refazer o resumo com o total certo. | Total errado: conferir os preços no Cardápio. |
 | 5 | Entrega: nome, endereço, "pago no Pix" | Resumir item a item, com subtotal, entrega e TOTAL, e perguntar "Posso confirmar?". NÃO criar o pedido antes do "sim". | Criou antes de confirmar: erro grave, me avise. |
 | 6 | "Sim, pode confirmar" | Dizer que o pedido foi registrado e que a loja confirma. Em `/teste`: avisar que é pedido de teste. No WhatsApp real: o pedido aparece em Pedidos com a etiqueta "WhatsApp". | Não aparece no painel: ver o quadro de status do Assistente. |
 | 7 | "Tem pizza?" / "Faz desconto de 20%?" | Dizer que não tem pizza (sem inventar) e que não pode dar desconto, oferecendo chamar um atendente. | Inventou item ou promoção: reforçar as regras da casa. |

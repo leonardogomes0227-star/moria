@@ -3,6 +3,7 @@ import type { Category } from '@/lib/types'
 
 const fallbackByCategory: Record<Category, string> = {
   Hambúrgueres: '/menu/burger-1.webp',
+  Tradicionais: '/menu/x-burguer.svg',
   Baguetes: '/menu/baguete-costela.svg',
   Acompanhamentos: '/menu/batata.svg',
   Molhos: '/menu/molho-artesanal.svg',

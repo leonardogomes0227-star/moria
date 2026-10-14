@@ -10,6 +10,8 @@ import { useMenuStore } from '@/store/menu'
 export function Categories() {
   const items = useMenuStore((s) => s.items)
   const setCategory = useMenuStore((s) => s.setCategory)
+  // Só mostra categorias que têm itens (a loja pode não vender todas).
+  const categories = items.length ? CATEGORIES.filter((c) => items.some((i) => i.categoria === c && i.disponivel)) : CATEGORIES
 
   return (
     <Section
@@ -18,8 +20,8 @@ export function Categories() {
       title="Escolha sua categoria"
       className="!pb-8"
     >
-      <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
-        {CATEGORIES.map((c, i) => {
+      <ul className={`grid gap-3 sm:gap-4 ${categories.length <= 3 ? "grid-cols-3" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"}`}>
+        {categories.map((c, i) => {
           const list = items.filter((it) => it.categoria === c && it.disponivel)
           const cover = list.find((it) => it.destaque) ?? list[0]
           return (
