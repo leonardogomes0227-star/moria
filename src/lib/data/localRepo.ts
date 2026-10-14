@@ -40,6 +40,25 @@ const KEY = {
   botChats: 'moria-demo:bot-chats',
 }
 
+/**
+ * Versão dos dados de exemplo. Quem já abriu a demonstração tem o cardápio/pedidos antigos salvos no navegador:
+ * quando esta versão muda, esses dados são descartados e o exemplo novo entra sozinho.
+ * Mude o valor sempre que alterar os dados de exemplo (cardápio, fichas, pedidos…).
+ */
+const DEMO_DATA_VERSION = '2026-10-cardapio-real-1'
+const VERSION_KEY = 'moria-demo:version'
+
+function dropStaleDemoData() {
+  try {
+    if (localStorage.getItem(VERSION_KEY) === DEMO_DATA_VERSION) return
+    Object.values(KEY).forEach((k) => localStorage.removeItem(k))
+    localStorage.setItem(VERSION_KEY, DEMO_DATA_VERSION)
+  } catch {
+    /* sem armazenamento: nada a limpar */
+  }
+}
+dropStaleDemoData()
+
 const FULL_MSG =
   'O armazenamento do navegador encheu. Use fotos menores ou restaure os dados de demonstração.'
 

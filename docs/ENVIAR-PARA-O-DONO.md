@@ -31,10 +31,14 @@ Na Vercel (Settings → Environment Variables): `ANTHROPIC_API_KEY` e `DEMO_PUBL
 - Depoimentos "Cliente Exemplo" e fotos repetidas dos hambúrgueres são de exemplo: peça as fotos reais.
 - Áudio, foto, avisos de status e resumo diário só funcionam no número real, depois da instalação.
 
-## 5. Se algo der errado
+## 5. Dados de exemplo antigos no navegador
+A demonstração salva os dados de exemplo no navegador de quem abre. Quando você muda os dados de exemplo (cardápio, fichas, pedidos), aumente `DEMO_DATA_VERSION` em `src/lib/data/localRepo.ts`: na próxima visita o navegador descarta o exemplo antigo sozinho. **Não mude depois de mandar o link ao dono**, senão ele perde o que mexeu.
+
+## 6. Se algo der errado
 | Sintoma | O que fazer |
 |---|---|
 | Link não abre | Rode a conferência: ela diz qual página falhou. Costuma ser deploy não terminado. |
 | Robô responde "Fala! Aqui é o Mori…" para tudo | É o roteiro: ele entende pedido, cardápio, horário, pagamento e atendente. Frases muito fora disso caem numa resposta genérica. Com a IA ligada isso melhora. |
 | Dono diz que "perdeu" os dados | Limpou o navegador ou trocou de aparelho. Use "Restaurar dados de teste". |
+| Aparece cardápio antigo | Seu navegador guardou o exemplo velho. Recarregue a página depois do novo deploy (a versão dos dados faz a limpeza), ou use "Restaurar dados de teste" em `/demo`. |
 | Gasto da IA subiu | Tire `DEMO_PUBLIC` na Vercel e confira o limite no console da Anthropic. |
