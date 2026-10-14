@@ -77,6 +77,8 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
   let upsold = false
   let awaitingTroco = false
   let misses = 0
+  /** Itens que o atendente acabou de mostrar: respostas curtas ("sim", "o segundo", "o mais barato") se referem a eles. */
+  let offered: MenuItem[] = []
 
   const fee = settings.deliveryFee.mode === 'fixed' ? settings.deliveryFee.amount : null
   const subtotal = () => cart.reduce((n, l) => n + l.item.preco * l.qtd, 0)
@@ -141,8 +143,10 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     const first = i.descricao.split('. ')[0].replace(/\.$/, '')
     return first.length > 90 ? `${first.slice(0, 87)}…` : first
   }
-  const describe = (i: MenuItem): string =>
-    `*${i.nome}* — ${brl(i.preco)}\n${i.descricao.replace(/ Preço a partir deste valor[^.]*\./, '')}`
+  const describe = (i: MenuItem): string => {
+    offered = [i]
+    return `*${i.nome}* — ${brl(i.preco)}\n${i.descricao.replace(/ Preço a partir deste valor[^.]*\./, '')}`
+  }
 
   const CAT_TITLE: Partial<Record<Category, string>> = {
     Hambúrgueres: '🍔 *Hambúrgueres da casa*',
@@ -166,6 +170,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
 
   const listCategory = (cat: Category): string => {
     const all = available.filter((i) => i.categoria === cat)
+    offered = all.slice(0, 10)
     const shown = all.slice(0, 10).map((i) => `- ${i.nome} — ${brl(i.preco)}`)
     if (all.length > shown.length) shown.push(`…e mais ${all.length - shown.length} opções`)
     return shown.join('\n')
@@ -199,6 +204,51 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     parts: ['Claro! Vou chamar um atendente da casa pra continuar com você. 🙏', 'Aviso a equipe agora, e eu fico em silêncio por aqui até ele assumir.'],
     handoff: true,
   })
+
+  /** Resposta depois de anotar item(ns): resumo, sugestão de bebida ou próxima pergunta. */
+  const added = (found: Line[], ambiguous: MenuItem[][] = []): DemoTurn => {
+    addToCart(found)
+    const parts: string[] = []
+    if (found.length) parts.push(`Show, tá na brasa! 😋\n${summary()}\n*Subtotal: ${brl(subtotal())}*`)
+    for (const group of ambiguous.slice(0, 1)) {
+      offered = group
+      parts.push(`Qual você quer?\n${group.map((g) => `- ${g.nome} — ${brl(g.preco)}`).join('\n')}`)
+    }
+    if (found.length && !ambiguous.length) {
+      offered = []
+      const up = upsell()
+      if (up) parts.push(up)
+      else if (settings.minOrder > subtotal()) parts.push(`O pedido mínimo é ${brl(settings.minOrder)}. Quer adicionar mais algo?`)
+      else parts.push(...askNext())
+      if (up) stage = 'livre'
+    }
+    return { parts }
+  }
+
+  /** Entende "sim", "o segundo", "o mais barato" como escolha entre os itens que acabou de mostrar. */
+  const pickOffered = (t: string): MenuItem | null => {
+    if (!offered.length) return null
+    if (offered.length === 1) return has(t, /\b(sim|quero|pode|bora|anota|manda|esse|isso|fechou|vou querer|uhum|ss)\b/) ? offered[0] : null
+    const ord: [RegExp, number][] = [[/\bprimeir[oa]\b|\b1\b|\bum\b/, 0], [/\bsegundo\b|\bsegunda opcao\b|\b2\b|\bdois\b/, 1], [/\bterceir[oa]\b|\b3\b|\btres\b/, 2], [/\bquarto\b|\b4\b/, 3], [/\bultim[oa]\b/, offered.length - 1]]
+    for (const [re, idx] of ord) if (has(t, re) && has(t, /\b(o|a|esse|essa|vou|quero|pode)\b|^\d$|primeir|segundo|terceir|ultim/) && offered[idx]) return offered[idx]
+    if (has(t, /mais barato|mais em conta|menor preco/)) return [...offered].sort((a, b) => a.preco - b.preco)[0]
+    if (has(t, /mais caro|maior|mais completo|mais forte/)) return [...offered].sort((a, b) => b.preco - a.preco)[0]
+    if (has(t, /tanto faz|qualquer|o melhor|me surpreend|voce escolhe|escolhe pra mim/)) return offered.find((i) => i.destaque) ?? offered[0]
+    return null
+  }
+
+  const STOPWORDS = new Set(['tem', 'com', 'sem', 'pra', 'por', 'uma', 'uns', 'que', 'nao', 'sim', 'das', 'dos', 'nas', 'nos', 'mas', 'quero', 'queria', 'algo', 'alguma', 'algum', 'coisa', 'tipo', 'isso', 'esse', 'essa', 'para', 'pra', 'com', 'sem', 'mais', 'muito', 'qual', 'quais', 'como', 'tem', 'tenho', 'voces', 'vcs', 'meu', 'minha', 'bom', 'boa', 'comer', 'pedir', 'pedido', 'lanche', 'hamburguer', 'burguer', 'burger', 'gosto', 'gostar', 'curto', 'curte', 'prefiro', 'prefere', 'diferente', 'outro', 'outra', 'ver', 'hoje', 'agora', 'favor', 'obrigado'])
+  /** Busca livre: "com geleia", "frango", "ovo", "queijo caipira" → itens que levam esse ingrediente. */
+  const searchByWord = (t: string): MenuItem[] | null => {
+    const words = [...new Set(t.split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOPWORDS.has(w)))]
+    let best: MenuItem[] | null = null
+    for (const w of words) {
+      const re = new RegExp(`\\b${w.replace(/s$/, '')}`)
+      const hits = available.filter((i) => i.categoria !== 'Bebidas' && re.test(norm(`${i.nome} ${i.descricao}`)))
+      if (hits.length && (!best || hits.length < best.length)) best = hits
+    }
+    return best
+  }
 
   const respond = (input: string): DemoTurn => {
     const t = norm(input)
@@ -278,6 +328,18 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
         return { parts: ['Sem problema! O que você quer mudar no pedido?'] }
       }
     }
+    const plain = t.replace(/[.!?,;:]+/g, '').trim()
+    if (cart.length && stage === 'tipo' && /^(fechar|fecha|fechar pedido|fecha o pedido|finalizar|finalizar pedido|pode fechar|so isso|e so|nao|mais nada)$/.test(plain)) return { parts: askNext() }
+    // Com itens no carrinho, respostas curtas já fazem andar o pedido (mesmo sem ele ter perguntado "entrega ou retirada").
+    if (cart.length && stage === 'livre') {
+      if (/^(nao|nao obrigado|nao quero|nao precisa|sem bebida|so isso|so|nada|por enquanto|pode fechar|fechar|fecha|fechar pedido|fecha o pedido|finalizar|finalizar pedido|e so|e isso|so isso mesmo|mais nada|e so isso)$/.test(plain)) return { parts: askNext() }
+      if (/^(mais um|mais uma|outro|outra|mais 1|mais um desse|mais uma dessa)$/.test(plain)) {
+        const last = cart[cart.length - 1]
+        last.qtd = Math.min(20, last.qtd + 1)
+        return { parts: [`Anotado! 😋\n${summary()}\n*Subtotal: ${brl(subtotal())}*`, 'Mais alguma coisa, ou já fecho o pedido?'] }
+      }
+      if (/^(entrega|entregar|retirada|retirar|retiro|delivery|para entrega|pra entrega|vou buscar|vou retirar|quero entrega|quero retirada|e entrega|e retirada)$/.test(plain)) stage = 'tipo'
+    }
     if (stage === 'tipo') {
       const isDelivery = has(t, /entrega|entregar|delivery|casa|leva/)
       const isPickup = has(t, /retir|buscar|busco|vou ai|pego/)
@@ -312,6 +374,15 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       }
     }
 
+    // Resposta curta a uma lista que ele acabou de mostrar ("o segundo", "o mais barato", "sim"): vale antes das outras intenções.
+    if (offered.length && t.split(/\s+/).length <= 4 && !/\?|^(tem|qual|quais|quanto|voces|vcs)\b/.test(t)) {
+      const named = findItems(input)
+      if (!named.found.length && !named.ambiguous.length) {
+        const early = pickOffered(t)
+        if (early) return added([{ item: early, qtd: qtyIn(t) }])
+      }
+    }
+
     // intenções livres
     const dayHit = DAYS.find(([re]) => has(t, re))
     if (dayHit && has(t, /abre|aberto|funciona|horario|fecha/)) {
@@ -331,18 +402,20 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
 
     if (has(t, /barato|em conta|economic|menor preco/)) {
       const cheap = [...available].filter((i) => i.categoria !== 'Bebidas').sort((a, b) => a.preco - b.preco).slice(0, 4)
+      offered = cheap
       return { parts: [`Os mais em conta hoje:\n${cheap.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')}`, 'Quer que eu anote algum?'] }
     }
     if (has(t, /crianc|kids|filho|filha|pequen/)) {
       const kids = available.find((i) => /kids/.test(norm(i.nome)))
       if (kids) return { parts: ['Para os pequenos temos o lanche kids! 🧒', describe(kids), 'Quer que eu anote?'] }
     }
-    const taste = has(t, /picante|apimentad|pimenta|ardid/) ? /pimenta|picante|apimentad/ : has(t, /doce|docinho|adocicad/) ? /mel |abacaxi/ : has(t, /grande|bem servido|muita fome|matar a fome|maior/) ? /tres hamburgueres|2 hamburgueres|3 hamburgueres/ : null
+    const taste = has(t, /picante|apimentad|pimenta|ardid/) ? /pimenta|picante|apimentad/ : has(t, /diferente|surpreend|inusitad|especial|gourmet|fora do comum/) ? /geleia|mel |abacaxi/ : has(t, /doce|docinho|adocicad/) ? /mel |abacaxi/ : has(t, /grande|bem servido|muita fome|matar a fome|maior/) ? /tres hamburgueres|2 hamburgueres|3 hamburgueres/ : null
     if (taste && !has(t, /quero (um|uma|dois|duas)/)) {
       const hits = available
         .filter((i) => taste.test(norm(i.descricao)) && i.categoria !== 'Bebidas')
         .sort((a, b) => Number(norm(b.descricao).includes('pimenta')) - Number(norm(a.descricao).includes('pimenta')))
         .slice(0, 4)
+      if (hits.length) offered = hits
       if (hits.length) return { parts: [`Pra esse gosto eu indico:\n${hits.map((i) => `- *${i.nome}* (${brl(i.preco)}): ${shortDesc(i)}`).join('\n')}`, 'Qual chamou a atenção?'] }
     }
     if (has(t, /combo/) && !hasCat('Combos'))
@@ -365,6 +438,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (has(t, /recomend|sugest|indica|qual (o )?melhor|(o )?que (voce|vc|tu) (acha|sugere|indica|recomenda)|mais (gostoso|vendido|pedido|famoso)|que (eu )?(peco|pedir|comer)|nao sei (o que|qual)|em duvida|escolher/)) {
       const picks = available.filter((i) => i.destaque && i.categoria !== 'Bebidas').slice(0, 3)
       const list = (picks.length ? picks : available.filter((i) => i.categoria !== 'Bebidas').slice(0, 3)).map((i) => `- *${i.nome}* (${brl(i.preco)}): ${shortDesc(i)}`)
+      offered = picks.length ? picks : available.filter((i) => i.categoria !== 'Bebidas').slice(0, 3)
       return { parts: ['Boa pergunta! Esses são os destaques da casa: 🔥', list.join('\n'), 'Você curte mais um lanche clássico, um com bacon ou algo diferente, com geleia? Me diz que eu monto o pedido.'] }
     }
     if (has(t, /obrigad|valeu|vlw|brigad/) && stage === 'livre') return { parts: ['Por nada! 😊 Qualquer coisa é só chamar.', 'Quando bater a fome, é só me dizer o que vai querer. 🔥'] }
@@ -376,27 +450,25 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (has(t, /^(voces |vcs )?(tem|temos|vende|vendem|faz|fazem)\b/) && !has(t, /quero|vou querer/)) {
       const { found, ambiguous } = findItems(input)
       const all = [...found.map((f) => f.item), ...ambiguous.flat()]
+      if (all.length) offered = all
       if (all.length) return { parts: [`Tem sim! 😋\n${all.map((i) => `- ${i.nome} — ${brl(i.preco)}`).join('\n')}`, 'Quer que eu anote?'] }
       for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Tem sim! Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
+      const byWord = searchByWord(t)
+      if (byWord) {
+        offered = byWord.slice(0, 8)
+        const rows = byWord.slice(0, 8).map((i) => `- ${i.nome} — ${brl(i.preco)}`)
+        if (byWord.length > 8) rows.push(`…e mais ${byWord.length - 8}`)
+        return { parts: [`Tem sim! 😋\n${rows.join('\n')}`, 'Qual você quer?'] }
+      }
       return { parts: ['Esse eu não tenho no cardápio. 😅', 'Quer ver os hambúrgueres da casa ou os lanches tradicionais?'] }
     }
 
     const { found, ambiguous } = findItems(input)
-    if (found.length || ambiguous.length) {
-      addToCart(found)
-      const parts: string[] = []
-      if (found.length) parts.push(`Show, tá na brasa! 😋\n${summary()}\n*Subtotal: ${brl(subtotal())}*`)
-      for (const group of ambiguous.slice(0, 1))
-        parts.push(`Qual você quer?\n${group.map((g) => `- ${g.nome} — ${brl(g.preco)}`).join('\n')}`)
-      if (found.length && !ambiguous.length) {
-        const up = upsell()
-        if (up) parts.push(up)
-        else if (settings.minOrder > subtotal()) parts.push(`O pedido mínimo é ${brl(settings.minOrder)}. Quer adicionar mais algo?`)
-        else parts.push(...askNext())
-        if (up) stage = 'livre'
-      }
-      return { parts }
-    }
+    if (found.length || ambiguous.length) return added(found, ambiguous)
+
+    const chosen = pickOffered(t)
+    if (chosen) return added([{ item: chosen, qtd: qtyIn(t) }])
+
 
     if (has(t, /cardapio|menu\b|opcoes|o que tem|que voces tem|preco|tabela|valores|lista de|quanto (custam|ta|esta)/)) {
       for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual chamou a atenção?'] }
@@ -406,6 +478,13 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
 
     if (cart.length && has(t, /so isso|so|nada|fecha|pode fechar|mais nada|e isso|nao quero mais|finalizar/)) return { parts: askNext() }
     if (cart.length && stage === 'livre' && has(t, /\b(sim|quero|pode|bora)\b/)) return { parts: askNext() }
+    const byWord = t.split(/\s+/).length <= 6 ? searchByWord(t) : null
+    if (byWord) {
+      offered = byWord.slice(0, 8)
+      const rows = byWord.slice(0, 8).map((i) => `- ${i.nome} — ${brl(i.preco)}`)
+      if (byWord.length > 8) rows.push(`…e mais ${byWord.length - 8}`)
+      return { parts: [`Com isso eu tenho:\n${rows.join('\n')}`, byWord.length === 1 ? 'Quer que eu anote?' : 'Qual você quer? Pode dizer o nome ou "o primeiro", "o mais barato"…'] }
+    }
     if (has(t, /cade|status|meu pedido/)) return { parts: ['Você ainda não tem pedido por aqui. Quer fazer um agora? 😊'] }
     if (has(t, /\b(oi|ola|bom dia|boa tarde|boa noite|e ai|eae|opa|salve)\b/))
       return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio, recomendar um lanche ou já anotar seu pedido por aqui mesmo.', shop.site ? `Se preferir, também dá pra montar o pedido no cardápio do site: ${shop.site}` : 'O que você tá com vontade?'] }

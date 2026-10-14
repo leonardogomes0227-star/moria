@@ -143,4 +143,54 @@ const text = (r: { parts: string[] }) => r.parts.join('\n')
   // pedir ainda funciona depois de perguntas
   assert.match(text(say(a, 'quero um x-bacon')), /1x X-Bacon — R\$ 22,00/)
 }
+// conversa com memória: responde ao que ele mesmo acabou de perguntar (caso real do teste do dono)
+{
+  const a = createDemoAgent(menuItems, settings, '', { site: 'https://moria.example' })
+  assert.match(text(say(a, 'cardápio preços')), /Hambúrgueres da casa/)
+  assert.match(text(say(a, 'o que me recomenda?')), /destaques da casa/)
+  let r = text(say(a, 'Com geleia'))
+  assert.match(r, /Com isso eu tenho/)
+  assert.match(r, /Pineapple Cheese/)
+  assert.match(r, /Chili Pepper/)
+  assert.doesNotMatch(r, /não peguei/)
+  // "o segundo" escolhe o 2º da lista mostrada
+  r = text(say(a, 'o segundo'))
+  assert.match(r, /1x /)
+  assert.match(r, /bebida gelada/)
+  // "o mais barato" entre as opções mostradas
+  const b = createDemoAgent(menuItems, settings)
+  say(b, 'quero algo com geleia')
+  r = text(say(b, 'o mais barato'))
+  assert.match(r, /1x Chilli Pepper Bacon — R\$ 30,00/)
+  // detalhes de um item e depois "sim"
+  const c = createDemoAgent(menuItems, settings)
+  assert.match(text(say(c, 'o que vem no mel e brasa?')), /Mel e Brasa\* — R\$ 30,00/)
+  assert.match(text(say(c, 'sim')), /1x Mel e Brasa — R\$ 30,00/)
+  // busca por ingrediente e por gosto
+  const d = createDemoAgent(menuItems, settings)
+  assert.match(text(say(d, 'tem com ovo?')), /Monte Moriá|X-Egg/)
+  assert.match(text(say(d, 'queria um de costela')), /Moriá Especial 1\.0/)
+  assert.match(text(say(d, 'clássico')), /Clássico Brasa/)
+  assert.match(text(say(d, 'algo diferente')), /Pineapple|Mel e Brasa|Pepper/)
+  assert.doesNotMatch(text(say(d, 'frango')), /não peguei/)
+  // frase sem relação nenhuma continua pedindo para reformular (e depois oferece atendente)
+  const e = createDemoAgent(menuItems, settings)
+  assert.match(text(say(e, 'blablabla')), /não peguei/)
+}
+// andamento natural do pedido com respostas curtas
+{
+  const a = createDemoAgent(menuItems, settings)
+  say(a, 'quero um x-bacon')
+  assert.match(text(say(a, 'mais um')), /2x X-Bacon — R\$ 44,00/)
+  assert.match(text(say(a, 'e uma coca')), /Coca-Cola 350ml/)
+  assert.match(text(say(a, 'fechar')), /entrega.*retirada/i)
+  const b = createDemoAgent(menuItems, settings)
+  say(b, 'quero um x-salada')
+  assert.match(text(say(b, 'não')), /entrega.*retirada/i)
+  assert.match(text(say(b, 'entrega')), /seu nome/i)
+  const c = createDemoAgent(menuItems, settings)
+  say(c, 'quero um x-bacon')
+  assert.match(text(say(c, 'entrega')), /seu nome/i) // pulou a pergunta da bebida
+  assert.match(text(say(c, 'Bia')), /endereço/i)
+}
 console.log('atendente de demonstração: tudo certo')
