@@ -87,6 +87,7 @@ const goodOrder = {
   assert.ok(a.includes('[h8] Clássico Moriá — R$ 28,00'))
   assert.ok(!/\d{2}:\d{2}/.test(a.split('CARDÁPIO')[0].replace(/\d{2}:\d{2}/g, '')) || true)
   assert.ok(a.includes('Pedido mínimo: sem mínimo'))
+  assert.ok(a.includes('mande a lista COMPLETA'))
   assert.ok(!a.includes('ITENS QUE A CASA MAIS GOSTA DE VENDER'))
   assert.ok(a.includes('DUAS FORMAS DE PEDIR') && !a.includes('cardápio do site ('))
   assert.ok(buildSystemPrompt(info({ site: 'https://moria.example' })).includes('cardápio do site (https://moria.example)'))

@@ -144,6 +144,24 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
   const describe = (i: MenuItem): string =>
     `*${i.nome}* — ${brl(i.preco)}\n${i.descricao.replace(/ Preço a partir deste valor[^.]*\./, '')}`
 
+  const CAT_TITLE: Partial<Record<Category, string>> = {
+    Hambúrgueres: '🍔 *Hambúrgueres da casa*',
+    Tradicionais: '🥪 *Lanches tradicionais (os X-)*',
+    Baguetes: '🥖 *Baguetes*',
+    Acompanhamentos: '🍟 *Acompanhamentos*',
+    Molhos: '🥫 *Molhos*',
+    Bebidas: '🥤 *Bebidas*',
+    Combos: '🎁 *Combos*',
+  }
+  /** Cardápio completo com preços, uma mensagem por categoria. */
+  const fullMenu = (): string[] => {
+    const cats = (Object.keys(CAT_TITLE) as Category[]).filter((c) => available.some((i) => i.categoria === c))
+    const parts = cats.map((c) => `${CAT_TITLE[c]}\n${available.filter((i) => i.categoria === c).map((i) => `${i.nome} — ${brl(i.preco)}`).join('\n')}`)
+    if (available.some((i) => i.descricao.includes('Preço a partir deste valor'))) parts.push('Os preços são a partir de: as opções (queijo, folhas, cebola) não mudam o valor. 😉')
+    parts.push(shop.site ? `Quer pedir por aqui comigo ou montar no cardápio do site (${shop.site})?` : 'O que vai querer? Eu anoto por aqui.')
+    return parts
+  }
+
   const hasCat = (cat: Category) => available.some((i) => i.categoria === cat)
 
   const listCategory = (cat: Category): string => {
@@ -380,10 +398,9 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       return { parts }
     }
 
-    if (has(t, /cardapio|menu|opcoes|o que tem|que voces tem|indica|sugest/)) {
+    if (has(t, /cardapio|menu\b|opcoes|o que tem|que voces tem|preco|tabela|valores|lista de|quanto (custam|ta|esta)/)) {
       for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual chamou a atenção?'] }
-      const star = available.find((i) => i.destaque) ?? available[0]
-      return { parts: ['Temos os hambúrgueres da casa (assados na brasa), os lanches tradicionais (os X-) e bebidas. 🍔', `O destaque da casa é o *${star.nome}* (${brl(star.preco)}). Quer começar por ele ou ver outra categoria?`] }
+      return { parts: fullMenu() }
     }
     for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
 
