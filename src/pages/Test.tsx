@@ -103,6 +103,9 @@ export default function Test() {
             {typing ? 'digitando…' : 'online · atendente virtual'}
           </p>
         </div>
+        <Link to="/demo" className="shrink-0 rounded-pill border border-white/15 px-3 py-1.5 text-xs text-[#8696a0] hover:bg-white/10">
+          Ver o resto
+        </Link>
       </header>
       <p className="bg-[#182229] px-4 py-2 text-center text-xs text-[#8696a0]">
         {live === false ? 'Demonstração do fluxo de atendimento. Com a IA ligada, o robô entende conversa livre, áudio e foto.' : 'Conversa de teste: nenhum pedido real é feito.'}

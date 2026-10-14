@@ -44,7 +44,9 @@ informe seu WhatsApp (recebe avisos de handoff) e ligue a chave.
 - **Limite de gasto:** em Assistente → "Limite de gasto com IA por mês" (padrão R$ 100). Ao atingir, o robô pausa, avisa o cliente e chama uma pessoa. Defina também um limite de gasto no console da Anthropic.
 - Custo: tokens da Anthropic (estimativa no painel) + tarifa de conversas da Meta (consulte a tabela atual da Meta).
 
-## Página de teste pública (`/teste`)
+## Página de teste pública (`/teste`, também `/robo`)
+No site de demonstração há um botão verde fixo **"Testar o robô"** em todas as telas, um convite no painel (Visão geral) e a central `/demo`. Para esses atalhos aparecerem mesmo com o Supabase ligado, defina `VITE_DEMO=1` na Vercel.
+
 Chat com visual de WhatsApp para o dono experimentar o robô sem login. As respostas chegam em 2 ou 3 mensagens curtas, com "digitando…".
 - Fica **desligada** por padrão. Para ligar, defina `ANTHROPIC_API_KEY` e `DEMO_PUBLIC=1` na Vercel (opcional: `DEMO_DAILY_LIMIT`, padrão 300 mensagens por dia). **Não precisa de Supabase**: sem banco, usa o cardápio de exemplo do site; com banco, usa o cardápio real.
 - Não cria pedidos nem grava conversas. Limite por IP (30/hora) e por dia ficam na memória da função e **reiniciam** quando ela "dorme": o freio de verdade é o **limite de gasto no console da Anthropic**.

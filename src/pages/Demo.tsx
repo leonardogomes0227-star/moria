@@ -15,11 +15,14 @@ interface StepProps {
   todo: string[]
   action: ReactNode
   extra?: ReactNode
+  /** Destaque (ex.: "mais fácil de testar"). */
+  badge?: string
 }
 
-function Step({ n, icon, title, subtitle, todo, action, extra }: StepProps) {
+function Step({ n, icon, title, subtitle, todo, action, extra, badge }: StepProps) {
   return (
-    <section className="card flex flex-col gap-4 p-6">
+    <section className={`card relative flex flex-col gap-4 p-6 ${badge ? 'border-[#15803D] shadow-[0_0_30px_rgba(21,128,61,.25)]' : ''}`}>
+      {badge && <span className="absolute right-4 top-4 rounded-pill bg-[#15803D] px-3 py-1 text-xs font-bold uppercase tracking-wide">{badge}</span>}
       <div className="flex items-center gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-lg font-bold" aria-hidden>
           {n}
@@ -111,6 +114,7 @@ export default function Demo() {
         />
         <Step
           n={3}
+          badge="Mais fácil de testar"
           icon={<BotIcon size={28} />}
           title="O robô de atendimento"
           subtitle="Atende o cliente no WhatsApp e anota o pedido sozinho."

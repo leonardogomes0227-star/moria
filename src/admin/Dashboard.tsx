@@ -2,6 +2,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { OpenBadge } from '@/components/OpenBadge'
 import { useOpenNow } from '@/hooks/useOpenNow'
 import { repo } from '@/lib/data'
+import { isDemoSite } from '@/lib/demoMode'
 import { formatPrice } from '@/lib/format'
 import { toast } from '@/store/toast'
 import { useSettings } from '@/store/settings'
@@ -93,6 +94,18 @@ export default function Dashboard() {
         title="Visão geral"
         description="Resumo do dia da sua hamburgueria: pedidos, faturamento e o que mais está saindo."
       />
+      {isDemoSite && (
+        <aside className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card border border-[#15803D]/60 bg-[#15803D]/10 p-5">
+          <div className="max-w-xl">
+            <p className="font-semibold text-[#86EFAC]">Teste o robô de atendimento</p>
+            <p className="mt-1 text-sm text-white/85">Converse como um cliente no WhatsApp, faça um pedido e veja ele aparecer aqui em Pedidos. Depois veja os resultados e os comandos do dono na tela Assistente.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a href="/teste" className="rounded-pill bg-[#15803D] px-5 py-2.5 font-semibold hover:bg-[#16A34A]">Conversar com o robô</a>
+            <Link to="/admin/assistente" className="rounded-pill border border-white/20 px-5 py-2.5 font-semibold hover:bg-white/10">Ver o Assistente</Link>
+          </div>
+        </aside>
+      )}
       {ordersError && (
         <ErrorBox message={ordersError} onRetry={() => void reloadOrders()} />
       )}

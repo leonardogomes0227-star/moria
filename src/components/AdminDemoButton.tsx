@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { config } from '@/lib/config'
-import { isSupabaseConfigured } from '@/lib/supabase'
+import { isDemoSite } from '@/lib/demoMode'
 import { DemoCredentials } from './DemoCredentials'
 import { Dialog } from './Dialog'
 import { CloseIcon, SettingsIcon } from './Icons'
@@ -33,7 +33,7 @@ export function AdminDemoButton() {
   const [invite, setInvite] = useState(false)
 
   useEffect(() => {
-    if (isSupabaseConfigured) return
+    if (!isDemoSite) return
     try {
       if (sessionStorage.getItem(SEEN_KEY) === '1') return
     } catch {
@@ -43,7 +43,7 @@ export function AdminDemoButton() {
     return () => window.clearTimeout(id)
   }, [])
 
-  if (isSupabaseConfigured) return null
+  if (!isDemoSite) return null
 
   const dismissInvite = () => {
     setInvite(false)
@@ -88,7 +88,7 @@ export function AdminDemoButton() {
               Você está vendo o site que o <strong>cliente</strong> vê. Existe também um
               painel para o <strong>dono</strong> controlar pedidos, cardápio e preços.
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -99,6 +99,9 @@ export function AdminDemoButton() {
               >
                 Conhecer o painel
               </button>
+              <a href="/teste" className="rounded-pill bg-[#15803D] px-4 py-2 text-sm font-semibold hover:bg-[#16A34A]">
+                Testar o robô
+              </a>
               <button
                 type="button"
                 onClick={dismissInvite}
@@ -144,6 +147,14 @@ export function AdminDemoButton() {
           >
             Entrar no painel agora →
           </a>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <a href="/teste" className="flex items-center justify-center rounded-pill border border-[#15803D] px-4 py-3 text-center font-semibold text-[#86EFAC] hover:bg-[#15803D]/20">
+              Conversar com o robô
+            </a>
+            <a href="/demo" className="flex items-center justify-center rounded-pill border border-white/20 px-4 py-3 text-center font-semibold hover:bg-white/10">
+              Central de demonstração
+            </a>
+          </div>
           <p className="text-center text-xs text-muted">
             Modo demonstração: o que você mexer fica salvo só neste navegador. Faça um
             pedido no site e veja ele aparecer lá.
