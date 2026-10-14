@@ -295,7 +295,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (has(t, /cardapio|menu|opcoes|o que tem|que voces tem|indica|sugest/)) {
       for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual chamou a atenção?'] }
       const star = available.find((i) => i.destaque) ?? available[0]
-      return { parts: ['Temos os hambúrgueres da casa (assados na brasa), os lanches tradicionais (os X-) e bebidas. 🍔', `O mais pedido é o *${star.nome}* (${brl(star.preco)}). Quer começar por ele ou ver outra categoria?`] }
+      return { parts: ['Temos os hambúrgueres da casa (assados na brasa), os lanches tradicionais (os X-) e bebidas. 🍔', `O destaque da casa é o *${star.nome}* (${brl(star.preco)}). Quer começar por ele ou ver outra categoria?`] }
     }
     for (const [re, cat] of CATEGORY_WORDS) if (has(t, re) && hasCat(cat)) return { parts: [`Olha as opções de ${cat.toLowerCase()}:\n${listCategory(cat)}`, 'Qual você quer?'] }
 

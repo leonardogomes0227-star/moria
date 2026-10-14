@@ -9,7 +9,7 @@ interface FavoritesProps {
   onOpen: (item: MenuItem) => void
 }
 
-/** Carrossel horizontal (scroll-snap) com os itens marcados como "Mais pedido". */
+/** Carrossel horizontal (scroll-snap) com os itens marcados como "Destaque". */
 export function Favorites({ items, onOpen }: FavoritesProps) {
   const track = useRef<HTMLUListElement>(null)
   const favorites = items.filter((i) => i.destaque && i.disponivel)
@@ -25,7 +25,7 @@ export function Favorites({ items, onOpen }: FavoritesProps) {
     <Section
       id="mais-pedidos"
       eyebrow="os queridinhos da casa"
-      title="Mais pedidos"
+      title="Destaques da casa"
       className="!pb-6"
     >
       <div className="relative">

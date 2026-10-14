@@ -79,7 +79,7 @@ function Seal() {
   )
 }
 
-/** Cartão flutuante com o item “mais pedido”: leva direto ao cardápio. */
+/** Cartão flutuante com o item em destaque: leva direto ao cardápio. */
 function FeaturedCard() {
   useMenu()
   const items = useMenuStore((s) => s.items)
@@ -101,7 +101,7 @@ function FeaturedCard() {
         <MenuImage src={item.imagem} alt="" categoria={item.categoria} />
       </span>
       <span>
-        <span className="block font-script text-sm text-ember">o mais pedido</span>
+        <span className="block font-script text-sm text-ember">destaque da casa</span>
         <span className="block font-display text-lg uppercase leading-tight">
           {item.nome}
         </span>

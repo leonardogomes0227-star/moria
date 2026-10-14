@@ -93,7 +93,7 @@ export function MenuCard({ item, onOpen, className = '' }: MenuCardProps) {
         />
         {item.destaque && item.disponivel && (
           <span className="absolute left-0 top-4 flex items-center gap-1.5 rounded-r-full bg-brand-gradient py-1 pl-3 pr-4 font-display text-sm uppercase tracking-wider shadow-glow">
-            <span aria-hidden="true">🔥</span> Mais pedido
+            <span aria-hidden="true">🔥</span> Destaque
           </span>
         )}
         {!item.disponivel && (

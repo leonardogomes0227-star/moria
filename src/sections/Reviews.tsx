@@ -6,6 +6,7 @@ import { reviews as seed } from '@/data/reviews'
 import { useRemoteList } from '@/hooks/useRemoteList'
 import { fetchReviews } from '@/lib/api'
 import { usePrefersReducedMotion } from '@/hooks/useReducedMotion'
+import { isDemoSite } from '@/lib/demoMode'
 
 const SWIPE = 60
 
@@ -37,6 +38,7 @@ export function Reviews() {
       title="O que dizem nossos clientes"
       className="bg-surface/40"
     >
+      {isDemoSite && <p className="mb-4 text-center text-xs text-muted">Depoimentos de exemplo: aqui entram os comentários reais dos clientes da Moriá.</p>}
       <div
         className="mx-auto max-w-2xl"
         role="group"

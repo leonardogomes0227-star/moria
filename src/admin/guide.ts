@@ -65,7 +65,7 @@ export const SECTIONS: AdminSection[] = [
     does: [
       '“Novo item” cadastra um produto (nome, descrição, preço, foto e adicionais).',
       '“Disponível” liga/desliga o item quando acaba o estoque.',
-      '“Mais pedido” coloca o selo de destaque e leva o item para a vitrine do site.',
+      '“Destaque” coloca o selo no item e o leva para a vitrine do site.',
     ],
   },
   {

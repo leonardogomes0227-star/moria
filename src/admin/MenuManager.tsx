@@ -103,8 +103,7 @@ export default function MenuManager() {
           aparecendo no site, mas esmaecido e sem botão de pedir.
         </p>
         <p>
-          <strong>Mais pedido:</strong> coloca o selo no item e o exibe no carrossel “Mais
-          pedidos da casa”.
+          <strong>Destaque:</strong> coloca o selo no item e o exibe no carrossel “Destaques da casa”.
         </p>
         <p>
           <strong>Setas:</strong> mudam a posição do item dentro da categoria.{' '}
@@ -160,7 +159,7 @@ export default function MenuManager() {
           >
             <option value="todos">Todos</option>
             <option value="indisponiveis">Só indisponíveis</option>
-            <option value="destaques">Só “mais pedidos”</option>
+            <option value="destaques">Só destaques</option>
           </select>
         )}
       </div>
@@ -227,13 +226,13 @@ export default function MenuManager() {
                 </label>
               </Tip>
               <Tip
-                text="Liga o selo “Mais pedido” no item e o coloca na vitrine “Mais pedidos” do site."
+                text="Liga o selo “Destaque” no item e o coloca na vitrine “Destaques da casa” do site."
                 side="bottom"
               >
                 <label className="flex items-center gap-2 text-sm">
-                  Mais pedido{' '}
+                  Destaque{' '}
                   <Toggle
-                    label={`Mais pedido: ${item.nome}`}
+                    label={`Destaque: ${item.nome}`}
                     checked={item.destaque}
                     onChange={(v) =>
                       void run(() => repo.menu.patch(item.id, { destaque: v }))

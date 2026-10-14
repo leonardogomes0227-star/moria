@@ -243,7 +243,7 @@ function EditorForm({
             checked={draft.destaque}
             onChange={(e) => set('destaque', e.target.checked)}
           />{' '}
-          Mais pedido
+          Destaque
         </label>
         <label className="flex items-center gap-2">
           <input
