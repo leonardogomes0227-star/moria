@@ -117,7 +117,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     upsold = true
     const hasDrink = cart.some((l) => l.item.categoria === 'Bebidas')
     const hasSide = cart.some((l) => l.item.categoria === 'Acompanhamentos')
-    if (!hasDrink && !hasSide) return 'Quer acompanhar com uma batata crocante e uma bebida gelada? 🍟'
+    if (!hasDrink && !hasSide) return 'Quer acompanhar com uma batata crocante e uma bebida gelada? Combina demais com a fumaça. 🍟'
     if (!hasDrink) return 'Vai querer uma bebida pra acompanhar?'
     if (!hasSide) return 'Que tal uma batata crocante pra completar?'
     return null
@@ -140,7 +140,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
   }
 
   const handoffTurn = (): DemoTurn => ({
-    parts: ['Claro! Vou chamar um atendente pra continuar com você. 🙏', 'Aviso a equipe agora, e eu fico em silêncio por aqui até ele assumir.'],
+    parts: ['Claro! Vou chamar um atendente da casa pra continuar com você. 🙏', 'Aviso a equipe agora, e eu fico em silêncio por aqui até ele assumir.'],
     handoff: true,
   })
 
@@ -152,7 +152,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
 
     if (stage === 'feito') {
       if (has(t, /cade|status|pedido|demora|quanto tempo/))
-        return { parts: ['Seu pedido já está com a loja, que confirma em instantes. 🔥', 'No painel dela ele aparece como *Novo*, com a etiqueta WhatsApp.'] }
+        return { parts: ['Seu pedido já está na cozinha, que confirma em instantes. 🔥', 'No painel dela ele aparece como *Novo*, com a etiqueta WhatsApp.'] }
       stage = 'livre'
       cart = []
       upsold = false
@@ -164,7 +164,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       if (nome.length < 2) return { parts: ['Pode me dizer seu nome pra eu anotar?'] }
       if (tipo === 'entrega') {
         stage = 'endereco'
-        return { parts: [`Prazer, ${first()}! 🤝`, 'Qual o endereço completo da entrega? (rua, número e um ponto de referência)'] }
+        return { parts: [`Prazer, ${first()}! Aqui você é de casa. 🤝`, 'Qual o endereço completo da entrega? (rua, número e um ponto de referência)'] }
       }
       stage = 'pagamento'
       return { parts: [`Prazer, ${first()}! 🤝`, `Como vai pagar? Aceitamos ${settings.payments.join(', ')}.`] }
@@ -215,7 +215,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
           entrega: entrega(),
           total: total(),
         }
-        return { parts: [`Fechado, ${first()}! Pedido registrado. ✅`, 'A loja recebeu e confirma em instantes. Obrigado pela preferência! 🍔🔥'], order }
+        return { parts: [`Fechado, ${first()}! Pedido registrado. ✅`, 'A cozinha já recebeu e confirma em instantes. Agora é só esperar a brasa trabalhar! 🍔🔥'], order }
       }
       if (has(t, /\bnao\b|muda|troca|tira|remove|alterar/)) {
         stage = 'livre'
@@ -228,7 +228,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
       if (isDelivery || isPickup) {
         tipo = isPickup && !isDelivery ? 'retirada' : 'entrega'
         stage = 'nome'
-        return { parts: [tipo === 'entrega' ? 'Beleza, vamos entregar! 🛵' : 'Beleza, é só passar aqui pra retirar! 🙌', 'Qual o seu nome?'] }
+        return { parts: [tipo === 'entrega' ? 'Fechou, vamos levar até você! 🛵' : 'Fechou, é só passar aqui pra pegar quentinho! 🙌', 'Qual o seu nome?'] }
       }
     }
 
@@ -260,9 +260,9 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (has(t, /horario|aberto|abre|fecha|funciona/))
       return { parts: [openLabel ? `${openLabel}. 🕒` : 'Funcionamos à noite, todos os dias. 🕒', 'Quer ver o cardápio ou já fazer o pedido?'] }
     if (has(t, /desconto|promocao|cupom|mais barato|fiado/))
-      return { parts: ['Os preços do cardápio são fixos e eu não consigo dar desconto. 🙏', 'Se quiser negociar algo, posso chamar um atendente. Quer?'] }
+      return { parts: ['Os preços do cardápio são fixos e eu não consigo dar desconto, mas garanto que o sabor compensa. 🙏', 'Se quiser conversar sobre isso, posso chamar um atendente. Quer?'] }
     if (has(t, /pizza|sushi|lasanha|acai|sorvete|pastel|marmita/))
-      return { parts: ['Pizza e esses outros a gente não tem. 😅', 'Mas nossos hambúrgueres defumados são a especialidade! Quer ver os mais pedidos?'] }
+      return { parts: ['Pizza e esses outros a gente não tem, aqui o forte é a brasa! 😅', 'Nossos hambúrgueres defumados são a especialidade. Quer ver os mais pedidos?'] }
     if (has(t, /pix|pagamento|cartao|aceita|forma de pag/) && !cart.length)
       return { parts: [`Aceitamos ${settings.payments.join(', ')}.`, 'O pagamento é combinado quando você confirma o pedido.'] }
     if (has(t, /entrega|taxa|frete/) && !cart.length)
@@ -272,7 +272,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (found.length || ambiguous.length) {
       addToCart(found)
       const parts: string[] = []
-      if (found.length) parts.push(`Anotei! 😋\n${summary()}\n*Subtotal: ${brl(subtotal())}*`)
+      if (found.length) parts.push(`Show, tá na brasa! 😋\n${summary()}\n*Subtotal: ${brl(subtotal())}*`)
       for (const group of ambiguous.slice(0, 1))
         parts.push(`Qual você quer?\n${group.map((g) => `- ${g.nome} — ${brl(g.preco)}`).join('\n')}`)
       if (found.length && !ambiguous.length) {
@@ -296,8 +296,8 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (cart.length && stage === 'livre' && has(t, /\b(sim|quero|pode|bora)\b/)) return { parts: askNext() }
     if (has(t, /cade|status|meu pedido/)) return { parts: ['Você ainda não tem pedido por aqui. Quer fazer um agora? 😊'] }
     if (has(t, /\b(oi|ola|bom dia|boa tarde|boa noite|e ai|eae|opa)\b/) || !cart.length)
-      return { parts: ['Oi! Aqui é o Mori, atendente virtual da Moriá. 🍔🔥', 'Posso te mostrar o cardápio ou já anotar seu pedido. O que você tá com vontade?'] }
-    return { parts: ['Não entendi bem. 😅 Me diz o que você quer comer, ou peça o cardápio que eu mostro.'] }
+      return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio ou já anotar seu pedido. O que você tá com vontade?'] }
+    return { parts: ['Eita, essa eu não peguei. 😅 Me diz o que você quer comer, ou pede o cardápio que eu mostro.'] }
   }
 
   return { reply }

@@ -11,7 +11,7 @@ const text = (r: { parts: string[] }) => r.parts.join('\n')
 // fluxo completo: XB + batata + Coca, entrega, Pix
 {
   const a = createDemoAgent(menuItems, settings, 'Aberto agora · até 23h')
-  assert.match(text(say(a, 'oi')), /Mori/)
+  assert.match(text(say(a, 'oi')), /Mori.*Moriá/s)
   let r = say(a, 'quero um xb com batata e coca')
   assert.match(text(r), /1x Moriá Clássico — R\$ 28,00/)
   assert.match(text(r), /1x Batata Frita Crocante — R\$ 16,00/)
@@ -32,7 +32,7 @@ const text = (r: { parts: string[] }) => r.parts.join('\n')
   assert.equal(r.order.cliente_nome, 'Ana Souza')
   assert.equal(r.order.itens.length, 3)
   assert.ok(r.order.itens.every((l) => l.item_id))
-  assert.match(text(say(a, 'cadê meu pedido?')), /loja/)
+  assert.match(text(say(a, 'cadê meu pedido?')), /cozinha/)
 }
 // quantidades, troca e remoção
 {
