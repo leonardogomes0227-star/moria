@@ -46,7 +46,7 @@ informe seu WhatsApp (recebe avisos de handoff) e ligue a chave.
 
 ## Página de teste pública (`/teste`)
 Chat com visual de WhatsApp para o dono experimentar o robô sem login. As respostas chegam em 2 ou 3 mensagens curtas, com "digitando…".
-- Fica **desligada** por padrão. Para ligar, defina `DEMO_PUBLIC=1` na Vercel (opcional: `DEMO_DAILY_LIMIT`, padrão 300 mensagens por dia).
+- Fica **desligada** por padrão. Para ligar, defina `ANTHROPIC_API_KEY` e `DEMO_PUBLIC=1` na Vercel (opcional: `DEMO_DAILY_LIMIT`, padrão 300 mensagens por dia). **Não precisa de Supabase**: sem banco, usa o cardápio de exemplo do site; com banco, usa o cardápio real.
 - Não cria pedidos nem grava conversas. Limite por IP (30/hora) e por dia ficam na memória da função e **reiniciam** quando ela "dorme": o freio de verdade é o **limite de gasto no console da Anthropic**.
 - Sem as variáveis, a página abre em modo demonstração, com respostas simuladas.
 - Desligue (`DEMO_PUBLIC` vazio) depois que o dono testar.

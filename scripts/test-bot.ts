@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import { HANDOFF_FALLBACK, pickModel, runAgent, type LlmClient } from '../api/_lib/agent.ts'
 import { buildSystemPrompt } from '../api/_lib/prompt.ts'
+import { createStaticStore } from '../api/_lib/staticStore.ts'
 import type { BotStore, StoreInfo } from '../api/_lib/types.ts'
 import { menuItems } from '../src/data/menu.ts'
 import { defaultSettings } from '../src/lib/config.ts'
@@ -246,4 +247,15 @@ const goodOrder = {
   console.log('✓ simulador sem efeitos, Haiku sem fallback, modelo validado')
 }
 
+{
+  // loja de demonstração (sem banco): o prompt tem o cardápio de exemplo e o chat funciona em dryRun
+  const st = createStaticStore()
+  const loaded = await st.loadStore()
+  assert.ok(loaded.menu.length > 10)
+  assert.ok(buildSystemPrompt(loaded).includes(loaded.menu[0].id))
+  const s2 = scripted([text('Oi! Quer ver o cardápio?')])
+  const out = await runAgent({ client: s2.client, store: st, phone: 'teste', customerName: 'Visitante', text: 'oi', now: new Date(), dryRun: true })
+  assert.equal(out.reply, 'Oi! Quer ver o cardápio?')
+  console.log('✓ loja de demonstração sem banco')
+}
 console.log('assistente: tudo certo')

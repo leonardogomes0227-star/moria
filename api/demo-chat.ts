@@ -2,6 +2,7 @@ import { pickModel, runAgent, sdkClient } from './_lib/agent.js'
 import { env } from './_lib/env.js'
 import { header, json, rawBody, type Req, type Res } from './_lib/http.js'
 import { splitReply } from './_lib/split.js'
+import { createStaticStore } from './_lib/staticStore.js'
 import { createSupabaseStore } from './_lib/supabaseStore.js'
 import type { ChatTurn } from './_lib/types.js'
 
@@ -9,6 +10,7 @@ export const config = { maxDuration: 60 }
 
 /**
  * Chat de teste PÚBLICO (página /teste), para o dono experimentar sem login. Só funciona com DEMO_PUBLIC=1.
+ * Funciona só com a chave da IA (cardápio de exemplo) ou, com Supabase configurado, com o cardápio real.
  * Os limites abaixo ficam na memória da função (reiniciam em cada "partida a frio"): são um freio básico.
  * A proteção de verdade é o limite de gasto configurado no console da Anthropic.
  */
@@ -20,7 +22,7 @@ let day = { key: '', count: 0 }
 export default async function handler(req: Req, res: Res): Promise<void> {
   if (req.method !== 'POST') return json(res, 405, { error: 'método não permitido' })
   if (process.env.DEMO_PUBLIC !== '1') return json(res, 404, { error: 'teste público desligado' })
-  if (!env.anthropicKey() || !env.supabaseUrl() || !env.supabaseServiceKey()) return json(res, 503, { error: 'servidor não configurado' })
+  if (!env.anthropicKey()) return json(res, 503, { error: 'servidor não configurado' })
 
   const now = Date.now()
   const today = new Date(now).toISOString().slice(0, 10)
@@ -48,7 +50,8 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     : []
 
   try {
-    const store = createSupabaseStore()
+    // Com banco configurado usa o cardápio real da loja; senão, o cardápio de exemplo do site.
+    const store = env.supabaseUrl() && env.supabaseServiceKey() ? createSupabaseStore() : createStaticStore()
     const info = await store.loadStore()
     info.bot = { ...info.bot, modelo: pickModel(info.bot.modelo) }
     const r = await runAgent({ client: sdkClient(env.anthropicKey()), store, phone: 'teste-publico', customerName: 'Visitante', text, now: new Date(), history, info, dryRun: true })
