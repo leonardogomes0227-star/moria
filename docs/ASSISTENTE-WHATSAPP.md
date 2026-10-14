@@ -27,6 +27,7 @@ da Vercel (`/api`) e usa a API da Anthropic (Claude), o Supabase e a WhatsApp Cl
 | `META_APP_SECRET` | Conferir a assinatura das mensagens (sem ela o webhook recusa tudo) |
 | `TRANSCRIBE_API_KEY` | *(opcional)* Ouvir áudios. Serviço de transcrição compatível com a API da OpenAI. Sem ela, o robô pede para o cliente escrever |
 | `TRANSCRIBE_URL`, `TRANSCRIBE_MODEL` | *(opcional)* Padrão: OpenAI `whisper-1`. Para Groq: `https://api.groq.com/openai/v1/audio/transcriptions` e `whisper-large-v3-turbo` |
+| `FREE_LLM_KEY`, `FREE_LLM_URL`, `FREE_LLM_MODEL` | *(opcional, só demonstração)* IA gratuita para o chat `/robo`, sem Claude. Veja `docs/IA-GRATIS.md` |
 | `STORE_SITE_URL` | *(opcional)* Endereço do site que o robô oferece como alternativa a pedir na conversa (ex.: https://seusite.com.br). No chat de teste usa o próprio endereço da demonstração |
 | `STORE_NAME`, `STORE_ADDRESS`, `STORE_INSTAGRAM`, `STORE_TZ` | Dados da loja (opcionais; padrão Campo Grande/MS) |
 

@@ -45,9 +45,9 @@ if (chat.status === 200) {
   try { reply = JSON.parse(chat.text).reply ?? '' } catch { /* ignora */ }
   line(true, 'Robô com IA de verdade: respondendo', '', `Resposta: “${reply.slice(0, 90).replace(/\s+/g, ' ')}”`)
 } else if (chat.status === 404) {
-  line(null, 'Robô com IA: desligado (a demonstração usa o roteiro, que funciona igual)', 'Para ligar: ANTHROPIC_API_KEY e DEMO_PUBLIC=1 na Vercel, e Redeploy.')
+  line(null, 'Robô com IA: desligado (a demonstração usa o roteiro, que funciona igual)', 'Para ligar: DEMO_PUBLIC=1 e uma chave (FREE_LLM_KEY para IA gratuita, ou ANTHROPIC_API_KEY) na Vercel, e Redeploy. Veja docs/IA-GRATIS.md.')
 } else if (chat.status === 503) {
-  line(null, 'Robô com IA: falta a ANTHROPIC_API_KEY (a demonstração usa o roteiro)')
+  line(null, 'Robô com IA: falta a chave (FREE_LLM_KEY ou ANTHROPIC_API_KEY); a demonstração usa o roteiro')
 } else {
   line(null, `Robô com IA: respondeu ${chat.status} (a demonstração cai no roteiro sozinha)`, chat.text.slice(0, 120))
 }

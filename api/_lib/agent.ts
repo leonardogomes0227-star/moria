@@ -61,7 +61,7 @@ function addUsage(total: Usage, u: Message['usage'] | undefined) {
 }
 
 /** Contexto do momento, colocado junto da mensagem para não invalidar o cache do prompt de sistema. */
-function momentContext(info: StoreInfo, now: Date, customerName: string, last?: Awaited<ReturnType<BotStore['ordersOf']>>[number]): string {
+export function momentContext(info: StoreInfo, now: Date, customerName: string, last?: Awaited<ReturnType<BotStore['ordersOf']>>[number]): string {
   const t = nowInTz(now, info.timezone)
   const memory = last
     ? `; cliente conhecido, último pedido: ${last.itens.map((i) => `${i.qtd}x ${i.nome}`).join(', ')} (${last.tipo}${last.tipo === 'entrega' && last.endereco ? `, endereço salvo: ${last.endereco}` : ''}, nome: ${last.cliente_nome}) — pode oferecer repetir, mas sempre confirme`

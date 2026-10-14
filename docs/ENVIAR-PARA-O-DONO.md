@@ -13,6 +13,9 @@ A demonstração funciona sozinha: o site, o painel e o chat do robô rodam no n
 4. Confirme com o dono os dados da loja (hoje são exemplo, em `src/lib/config.ts`): WhatsApp para onde vai o pedido de teste, horários e taxa de entrega. O endereço fica só com a cidade até você ter o real.
 
 ## 2. Opcional: IA de verdade no chat
+**Sem gastar nada:** use uma IA de plano gratuito — veja `docs/IA-GRATIS.md` (variáveis `FREE_LLM_KEY`, `FREE_LLM_URL`, `FREE_LLM_MODEL` e `DEMO_PUBLIC=1`).
+
+Com o Claude:
 Na Vercel (Settings → Environment Variables): `ANTHROPIC_API_KEY` e `DEMO_PUBLIC` = `1`, e `VITE_DEMO` = `1` se ligar o Supabase. Faça Redeploy e rode a conferência de novo: a linha "Robô com IA" deve ficar ✅.
 - Defina antes um **limite de gasto** no console da Anthropic (US$ 5 sobra).
 - Se a IA falhar, der limite ou demorar mais de 25 s, o chat **continua no roteiro sozinho**. O dono não vê erro.

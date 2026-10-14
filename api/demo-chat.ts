@@ -1,4 +1,5 @@
 import { pickModel, runAgent, sdkClient } from './_lib/agent.js'
+import { runCompatAgent } from './_lib/agentCompat.js'
 import { env } from './_lib/env.js'
 import { header, json, rawBody, type Req, type Res } from './_lib/http.js'
 import { splitReply } from './_lib/split.js'
@@ -10,7 +11,7 @@ export const config = { maxDuration: 60 }
 
 /**
  * Chat de teste PÚBLICO (página /teste), para o dono experimentar sem login. Só funciona com DEMO_PUBLIC=1.
- * Funciona só com a chave da IA (cardápio de exemplo) ou, com Supabase configurado, com o cardápio real.
+ * Funciona só com a chave da IA (Claude, ou uma IA gratuita via FREE_LLM_KEY) (cardápio de exemplo) ou, com Supabase configurado, com o cardápio real.
  * Os limites abaixo ficam na memória da função (reiniciam em cada "partida a frio"): são um freio básico.
  * A proteção de verdade é o limite de gasto configurado no console da Anthropic.
  */
@@ -22,7 +23,7 @@ let day = { key: '', count: 0 }
 export default async function handler(req: Req, res: Res): Promise<void> {
   if (req.method !== 'POST') return json(res, 405, { error: 'método não permitido' })
   if (process.env.DEMO_PUBLIC !== '1') return json(res, 404, { error: 'teste público desligado' })
-  if (!env.anthropicKey()) return json(res, 503, { error: 'servidor não configurado' })
+  if (!env.anthropicKey() && !env.freeLlmKey()) return json(res, 503, { error: 'servidor não configurado' })
 
   const now = Date.now()
   const today = new Date(now).toISOString().slice(0, 10)
@@ -57,7 +58,11 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     // O site que está servindo a demonstração (se STORE_SITE_URL não estiver definida).
     const host = header(req, 'x-forwarded-host') ?? header(req, 'host')
     info.site = info.site ?? (host ? `https://${host}` : undefined)
-    const r = await runAgent({ client: sdkClient(env.anthropicKey()), store, phone: 'teste-publico', customerName: 'Visitante', text, now: new Date(), history, info, dryRun: true })
+    const base = { store, phone: 'teste-publico', customerName: 'Visitante', text, now: new Date(), history, info }
+    // Com chave do Claude usa o Claude; senão, a IA gratuita configurada para a demonstração.
+    const r = env.anthropicKey()
+      ? await runAgent({ client: sdkClient(env.anthropicKey()), dryRun: true, ...base })
+      : await runCompatAgent({ cfg: { url: env.freeLlmUrl(), key: env.freeLlmKey(), model: env.freeLlmModel() }, ...base })
     json(res, 200, { reply: r.reply, parts: splitReply(r.reply), handoff: r.handoff, orderCreated: r.toolCalls.includes('criar_pedido') })
   } catch (err) {
     console.error('teste público: falha', err instanceof Error ? err.name : 'erro')

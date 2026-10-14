@@ -11,6 +11,10 @@ export const env = {
   transcribeKey: () => process.env.TRANSCRIBE_API_KEY ?? '',
   transcribeUrl: () => process.env.TRANSCRIBE_URL ?? 'https://api.openai.com/v1/audio/transcriptions',
   transcribeModel: () => process.env.TRANSCRIBE_MODEL ?? 'whisper-1',
+  /** IA gratuita para a demonstração (qualquer serviço com API no formato "chat completions" da OpenAI: Groq, Gemini, OpenRouter…). */
+  freeLlmKey: () => process.env.FREE_LLM_KEY ?? '',
+  freeLlmUrl: () => process.env.FREE_LLM_URL ?? 'https://api.groq.com/openai/v1/chat/completions',
+  freeLlmModel: () => process.env.FREE_LLM_MODEL ?? 'llama-3.3-70b-versatile',
   cronSecret: () => process.env.CRON_SECRET ?? '',
   /** Modelo aprovado na Meta para o resumo diário (opcional; permite mandar fora da janela de 24 h). */
   summaryTemplate: () => process.env.WHATSAPP_SUMMARY_TEMPLATE ?? '',
