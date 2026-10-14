@@ -202,6 +202,12 @@ export const localRepo: Repo = {
         orders().map((o) => (o.id === id ? { ...o, status } : o)),
       )
     },
+    async markStock(id, baixado) {
+      write(
+        KEY.orders,
+        orders().map((o) => (o.id === id ? { ...o, estoque_baixado: baixado } : o)),
+      )
+    },
   },
 
   reviews: {

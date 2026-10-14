@@ -2,7 +2,7 @@ import { estimateBotCost } from '../../src/lib/finance/botCost.ts'
 import { splitReply, typingDelay } from './split.js'
 import { HANDOFF_FALLBACK, runAgent, type LlmClient } from './agent.js'
 import type { BotStore, ChatTurn, Usage } from './types.js'
-import type { Incoming } from './whatsapp.js'
+import type { Incoming, Media } from './whatsapp.js'
 
 /** Operações extras que só o webhook usa (registro de mensagens e sessão). */
 export interface WebhookStore extends BotStore {
@@ -10,6 +10,8 @@ export interface WebhookStore extends BotStore {
   claimMessage(msg: Incoming): Promise<boolean>
   /** Conversa anterior, sem a mensagem recém-gravada. */
   historyBefore(phone: string, waId: string, limit: number): Promise<ChatTurn[]>
+  /** Troca o texto gravado de uma mensagem (ex.: o que foi dito num áudio). */
+  setMessageText(waId: string, text: string): Promise<void>
   humanUntil(phone: string): Promise<Date | null>
   recentCustomerMessages(phone: string, minutes: number): Promise<number>
   /** Tokens gastos pelo assistente neste mês (para o limite de gasto). */
@@ -24,17 +26,27 @@ export interface WebhookDeps {
   now: () => Date
   /** Pausa entre as mensagens (padrão: espera de verdade). Os testes passam uma função vazia. */
   sleep?: (ms: number) => Promise<void>
+  /** Baixar mídia e transcrever áudio. Sem `transcribe`, o robô pede para o cliente escrever. */
+  media?: { download: (id: string) => Promise<Media>; transcribe?: (data: Buffer, mime: string) => Promise<string> }
 }
 
 export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'budget' | 'unsupported' | 'replied' | 'error'
 
 const MAX_PER_HOUR = 40
 const MAX_TEXT = 1000
+const AUDIO_FAIL = 'Não consegui ouvir seu áudio direito. Pode escrever ou mandar de novo? 🙏'
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const UNSUPPORTED_AUDIO = 'Ainda não consigo ouvir áudios por aqui. Pode me escrever o que você precisa? 😊'
 const UNSUPPORTED = 'Por enquanto eu só consigo ler mensagens de texto. Pode me escrever o que você precisa? 😊'
 
 /** Trata uma mensagem recebida: decide se responde, chama a IA e envia a resposta. */
 export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<Outcome> {
   const { store, llm, send } = deps
+  const reply = async (text: string, outcome: Outcome): Promise<Outcome> => {
+    await store.saveReply(msg.from, text, { tokens_in: 0, tokens_out: 0, tokens_cache: 0 })
+    await send(msg.from, text)
+    return outcome
+  }
   try {
     const info = await store.loadStore()
     if (!info.bot.ativo) return 'disabled'
@@ -59,14 +71,38 @@ export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<
       return 'budget'
     }
 
-    if (msg.type !== 'text' || !msg.text.trim()) {
-      await store.saveReply(msg.from, UNSUPPORTED, { tokens_in: 0, tokens_out: 0, tokens_cache: 0 })
-      await send(msg.from, UNSUPPORTED)
-      return 'unsupported'
+    let text = msg.text
+    let images: { mime: string; base64: string }[] | undefined
+
+    if (msg.type === 'audio') {
+      const transcribe = deps.media?.transcribe
+      if (!msg.mediaId || !deps.media || !transcribe) return reply(UNSUPPORTED_AUDIO, 'unsupported')
+      try {
+        const audio = await deps.media.download(msg.mediaId)
+        const said = (await transcribe(audio.data, audio.mime)).trim()
+        if (!said) return reply(AUDIO_FAIL, 'unsupported')
+        await store.setMessageText(msg.id, `🎤 ${said}`)
+        text = `[Áudio transcrito automaticamente] ${said}`
+      } catch {
+        return reply(AUDIO_FAIL, 'unsupported')
+      }
+    } else if (msg.type === 'image') {
+      try {
+        if (!msg.mediaId || !deps.media) throw new Error('sem mídia')
+        const img = await deps.media.download(msg.mediaId)
+        if (!IMAGE_TYPES.includes(img.mime)) throw new Error('tipo de imagem não aceito')
+        images = [{ mime: img.mime, base64: img.data.toString('base64') }]
+        text = `[O cliente enviou uma foto]${msg.text ? ` Legenda: ${msg.text}` : ''}`
+        await store.setMessageText(msg.id, `📷 ${msg.text || 'foto'}`)
+      } catch {
+        return reply(UNSUPPORTED, 'unsupported')
+      }
     }
 
+    if (!text.trim() || !['text', 'audio', 'image'].includes(msg.type)) return reply(UNSUPPORTED, 'unsupported')
+
     const history = await store.historyBefore(msg.from, msg.id, 20)
-    const result = await runAgent({ client: llm, store, phone: msg.from, customerName: msg.name, text: msg.text.slice(0, MAX_TEXT), now: deps.now(), history, info })
+    const result = await runAgent({ client: llm, store, phone: msg.from, customerName: msg.name, text: text.slice(0, MAX_TEXT), now: deps.now(), history, info, images })
     await store.saveReply(msg.from, result.reply, result.usage)
     const wait = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)))
     for (const [i, part] of splitReply(result.reply).entries()) {

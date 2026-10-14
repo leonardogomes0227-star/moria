@@ -25,6 +25,8 @@ da Vercel (`/api`) e usa a API da Anthropic (Claude), o Supabase e a WhatsApp Cl
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` | Enviar mensagens |
 | `WHATSAPP_VERIFY_TOKEN` | Texto secreto que você inventa, usado na verificação do webhook |
 | `META_APP_SECRET` | Conferir a assinatura das mensagens (sem ela o webhook recusa tudo) |
+| `TRANSCRIBE_API_KEY` | *(opcional)* Ouvir áudios. Serviço de transcrição compatível com a API da OpenAI. Sem ela, o robô pede para o cliente escrever |
+| `TRANSCRIBE_URL`, `TRANSCRIBE_MODEL` | *(opcional)* Padrão: OpenAI `whisper-1`. Para Groq: `https://api.groq.com/openai/v1/audio/transcriptions` e `whisper-large-v3-turbo` |
 | `STORE_NAME`, `STORE_ADDRESS`, `STORE_INSTAGRAM`, `STORE_TZ` | Dados da loja (opcionais; padrão Campo Grande/MS) |
 
 ## 3. Webhook
@@ -49,5 +51,11 @@ Chat com visual de WhatsApp para o dono experimentar o robô sem login. As respo
 - Sem as variáveis, a página abre em modo demonstração, com respostas simuladas.
 - Desligue (`DEMO_PUBLIC` vazio) depois que o dono testar.
 
-## Ainda não existe
-Áudio (precisa de um serviço de transcrição), leitura de fotos e baixa automática de estoque.
+## O que o robô faz além de texto
+- **Áudio:** baixa o áudio, transcreve (com `TRANSCRIBE_API_KEY`) e responde ao que foi dito. Transcrição incerta → confirma com o cliente. A transcrição fica salva na conversa.
+- **Fotos:** o Claude vê a imagem (JPEG, PNG ou WebP até 5 MB). Comprovante de pagamento: nunca confirma pagamento, só diz que a loja confere. Problema com pedido: chama atendente.
+- **Memória do cliente:** reconhece quem já pediu e oferece repetir o último pedido (sempre confirmando).
+- **Mensagens curtas:** a resposta sai em até 3 mensagens, com pausa entre elas.
+- **Estoque:** pedidos do robô entram como qualquer outro; a baixa automática de ingredientes (Custos → Ingredientes) acontece quando o pedido é marcado como concluído.
+
+> Áudio, foto e a conexão com a Meta **não foram testados ao vivo** (só com simulações). Teste com um número real antes de entregar.

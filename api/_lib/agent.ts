@@ -39,6 +39,8 @@ export interface AgentInput {
   /** Se já carregou a loja, evita nova consulta. */
   info?: StoreInfo
   dryRun?: boolean
+  /** Fotos enviadas pelo cliente nesta mensagem. */
+  images?: { mime: string; base64: string }[]
 }
 
 export interface AgentResult {
@@ -59,9 +61,12 @@ function addUsage(total: Usage, u: Message['usage'] | undefined) {
 }
 
 /** Contexto do momento, colocado junto da mensagem para não invalidar o cache do prompt de sistema. */
-function momentContext(info: StoreInfo, now: Date, customerName: string): string {
+function momentContext(info: StoreInfo, now: Date, customerName: string, last?: Awaited<ReturnType<BotStore['ordersOf']>>[number]): string {
   const t = nowInTz(now, info.timezone)
-  return `[Contexto automático — agora: ${t.label}; loja ${info.open ? 'ABERTA' : 'FECHADA'}; nome do contato no WhatsApp: ${customerName || 'desconhecido'}]`
+  const memory = last
+    ? `; cliente conhecido, último pedido: ${last.itens.map((i) => `${i.qtd}x ${i.nome}`).join(', ')} (${last.tipo}${last.tipo === 'entrega' && last.endereco ? `, endereço salvo: ${last.endereco}` : ''}, nome: ${last.cliente_nome}) — pode oferecer repetir, mas sempre confirme`
+    : ''
+  return `[Contexto automático — agora: ${t.label}; loja ${info.open ? 'ABERTA' : 'FECHADA'}; nome do contato no WhatsApp: ${customerName || 'desconhecido'}${memory}]`
 }
 
 /** Uma rodada da conversa: recebe a mensagem do cliente, usa as ferramentas que precisar e devolve a resposta. */
@@ -73,9 +78,18 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const toolCalls: string[] = []
   let handoff = false
 
+  // Memória do cliente: o último pedido ajuda a oferecer "o mesmo de sempre". Não existe no simulador.
+  const last = input.dryRun ? undefined : (await input.store.ordersOf(input.phone, 1).catch(() => []))[0]
+  const header = `${momentContext(info, input.now, input.customerName, last)}\n${input.text}`.trim()
+  const userContent: MessageParam['content'] = input.images?.length
+    ? [
+        ...input.images.map((img) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: img.mime as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif', data: img.base64 } })),
+        { type: 'text' as const, text: header },
+      ]
+    : header
   const messages: MessageParam[] = [
     ...history.slice(-MAX_HISTORY).map((t): MessageParam => ({ role: t.role, content: t.content })),
-    { role: 'user', content: `${momentContext(info, input.now, input.customerName)}\n${input.text}` },
+    { role: 'user', content: userContent },
   ]
   const system = [{ type: 'text' as const, text: buildSystemPrompt(info), cache_control: { type: 'ephemeral' as const } }]
 

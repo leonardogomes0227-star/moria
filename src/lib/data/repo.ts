@@ -60,6 +60,8 @@ export interface Repo {
     create(order: NewOrder): Promise<void>
     list(): Promise<Order[]>
     setStatus(id: string, status: OrderStatus): Promise<void>
+    /** Marca que os insumos do pedido já foram descontados (ou devolvidos) do estoque. */
+    markStock(id: string, baixado: boolean): Promise<void>
   }
   reviews: {
     list(): Promise<Review[]>

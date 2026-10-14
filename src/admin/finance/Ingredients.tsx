@@ -17,7 +17,7 @@ import { toast } from '@/store/toast'
 import { NumField } from '../fields'
 import { fmtNum } from '../numbers'
 import { Tip } from '../Tip'
-import { ErrorBox, HelpBox, PageHeader, Spinner } from '../ui'
+import { ErrorBox, HelpBox, PageHeader, Spinner, Toggle } from '../ui'
 import { FinanceTabs } from './FinanceTabs'
 import { useFinanceData } from './useFinanceData'
 
@@ -221,6 +221,27 @@ export default function Ingredients() {
           e todas as fichas se atualizam.
         </p>
       </HelpBox>
+      {fin.loaded && (
+        <div className="card mb-5 flex items-center justify-between gap-4 p-4">
+          <div>
+            <p className="font-semibold">Baixa automática de estoque</p>
+            <p className="text-sm text-muted">
+              Ao marcar um pedido como <strong>concluído</strong>, os ingredientes da ficha técnica saem do estoque
+              (e voltam se você cancelar). Só liga depois de cadastrar as quantidades certas.
+            </p>
+          </div>
+          <Toggle
+            label="Baixa automática de estoque"
+            checked={fin.settings.baixa_estoque}
+            onChange={(v) =>
+              void run(
+                () => repo.finance.settings.save({ ...fin.settings, baixa_estoque: v }),
+                v ? 'Baixa automática ligada.' : 'Baixa automática desligada.',
+              )
+            }
+          />
+        </div>
+      )}
       {fin.error && <ErrorBox message={fin.error} onRetry={() => void fin.reload()} />}
       {!fin.loaded && !fin.error && <Spinner />}
 

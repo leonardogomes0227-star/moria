@@ -291,4 +291,5 @@ export const seedFinanceSettings: FinanceSettings = {
   taxa_cartao_pct: 3,
   imposto_pct: 6,
   meta_lucro_pct: 20,
+  baixa_estoque: false,
 }

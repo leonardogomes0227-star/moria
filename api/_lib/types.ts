@@ -31,7 +31,7 @@ export interface BotStore {
   history(phone: string, limit: number): Promise<ChatTurn[]>
   createOrder(order: NewOrder): Promise<{ numero: number }>
   /** Pedidos mais recentes DESTE telefone. */
-  ordersOf(phone: string, limit: number): Promise<Pick<Order, 'numero' | 'status' | 'tipo' | 'total' | 'criado_em' | 'itens'>[]>
+  ordersOf(phone: string, limit: number): Promise<Pick<Order, 'numero' | 'status' | 'tipo' | 'total' | 'criado_em' | 'itens' | 'cliente_nome' | 'endereco'>[]>
   /** Pausa o robô para este cliente por `hours` horas e avisa o dono. */
   requestHuman(phone: string, customerName: string, reason: string, hours: number): Promise<void>
 }

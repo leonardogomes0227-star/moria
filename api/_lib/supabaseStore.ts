@@ -1,10 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { defaultSettings } from '../../src/lib/config.ts'
 import { defaultBotSettings } from '../../src/lib/finance/defaults.ts'
-import type { MenuItem, NewOrder, Order, StoreSettings } from '../../src/lib/types.ts'
+import type { MenuItem, NewOrder, StoreSettings } from '../../src/lib/types.ts'
 import { env } from './env.js'
 import { isOpenAt } from './hours.js'
-import type { ChatTurn, StoreInfo, Usage } from './types.js'
+import type { BotStore, ChatTurn, StoreInfo, Usage } from './types.js'
 import { sendText, type Incoming } from './whatsapp.js'
 import type { WebhookStore } from './webhook.js'
 
@@ -83,12 +83,12 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
     async ordersOf(phone, limit) {
       const { data, error } = await sb
         .from('orders')
-        .select('numero,status,tipo,total,criado_em,itens')
+        .select('numero,status,tipo,total,criado_em,itens,cliente_nome,endereco')
         .eq('cliente_telefone', phone)
         .order('criado_em', { ascending: false })
         .limit(limit)
       ok(error)
-      return (data ?? []) as Pick<Order, 'numero' | 'status' | 'tipo' | 'total' | 'criado_em' | 'itens'>[]
+      return (data ?? []) as Awaited<ReturnType<BotStore['ordersOf']>>
     },
 
     async requestHuman(phone, customerName, reason, hours) {
@@ -113,6 +113,11 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Webho
         ok(res.error)
       }
       return true
+    },
+
+    async setMessageText(waId, text) {
+      const res = await sb.from('bot_messages').update({ texto: text.slice(0, 2000) }).eq('wa_id', waId)
+      ok(res.error)
     },
 
     async humanUntil(phone) {

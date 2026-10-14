@@ -26,6 +26,7 @@ const msgs = extractMessages(payload)
 assert.equal(msgs.length, 2)
 assert.deepEqual(msgs[0], { id: 'wamid.1', from: '5567999990000', name: 'Ana', type: 'text', text: 'oi' })
 assert.equal(msgs[1].type, 'image')
+assert.equal(extractMessages({ entry: [{ changes: [{ value: { messages: [{ id: 'z', from: '55', type: 'audio', audio: { id: 'media-1' } }] } }] }] })[0].mediaId, 'media-1')
 assert.deepEqual(extractMessages(null), [])
 assert.deepEqual(extractMessages({}), [])
 
@@ -40,6 +41,9 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
   const sent: string[] = []
   const saved: { text: string; usage: Usage }[] = []
   const humans: string[] = []
+  const edited: [string, string][] = []
+  const sawImages: number[] = []
+  const sawText: string[] = []
   let human: Date | null = null
   let recent = 0
   let month: Usage = { tokens_in: 0, tokens_out: 0, tokens_cache: 0 }
@@ -54,18 +58,23 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
     historyBefore: async (): Promise<ChatTurn[]> => [],
     humanUntil: async () => human,
     recentCustomerMessages: async () => recent,
+    setMessageText: async (id, text) => { edited.push([id, text]) },
     monthUsage: async () => month,
     saveReply: async (_p, text, usage) => { saved.push({ text, usage }) },
   }
   const llm: LlmClient = {
-    create: async () => {
+    create: async (params) => {
       llmCalls++
+      const last = params.messages.at(-1)
+      const content = last?.content
+      sawImages.push(Array.isArray(content) ? content.filter((b) => b.type === 'image').length : 0)
+      sawText.push(JSON.stringify(content))
       if (llmText === 'THROW') throw new Error('rede')
       return { content: [{ type: 'text', text: llmText }], stop_reason: 'end_turn', usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as never
     },
   }
   const deps = { store, llm, send: async (_t: string, t: string) => { sent.push(t) }, now: () => new Date('2026-10-13T20:00:00Z'), sleep: async () => undefined }
-  return { deps, sent, saved, humans, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
+  return { deps, sent, saved, humans, edited, sawImages, sawText, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
 }
 function m(id: string, text = 'oi', type = 'text'): Incoming {
   return { id: id, from: '5567999990000', name: 'Ana', type: type, text: text }
@@ -139,5 +148,43 @@ function m(id: string, text = 'oi', type = 'text'): Incoming {
   assert.equal(await handleIncoming(m('1'), s.deps), 'replied')
   assert.deepEqual(s.sent, ['Oi, tudo bem?', 'Qual hambúrguer você curte?', 'Temos o Clássico.\n\nE o Bacon.'])
   assert.equal(s.saved.length, 1)
+}
+{
+  // áudio com transcrição
+  const s = setup(info())
+  const audio: Incoming = { id: 'a1', from: '5567999990000', name: 'Ana', type: 'audio', text: '', mediaId: 'm1' }
+  s.deps.media = { download: async () => ({ data: Buffer.from('x'), mime: 'audio/ogg' }), transcribe: async () => '  quero um xb com batata  ' }
+  assert.equal(await handleIncoming(audio, s.deps), 'replied')
+  assert.deepEqual(s.edited, [['a1', '🎤 quero um xb com batata']])
+  assert.ok(s.sawText[0].includes('[Áudio transcrito automaticamente] quero um xb com batata'))
+  // áudio sem serviço de transcrição
+  const n = setup(info())
+  n.deps.media = { download: async () => ({ data: Buffer.from('x'), mime: 'audio/ogg' }) }
+  assert.equal(await handleIncoming({ ...audio, id: 'a2' }, n.deps), 'unsupported')
+  assert.equal(n.calls(), 0)
+  assert.match(n.sent[0], /áudio/)
+  // transcrição vazia ou falha
+  const f = setup(info())
+  f.deps.media = { download: async () => ({ data: Buffer.from('x'), mime: 'audio/ogg' }), transcribe: async () => '' }
+  assert.equal(await handleIncoming({ ...audio, id: 'a3' }, f.deps), 'unsupported')
+  f.deps.media = { download: async () => { throw new Error('rede') }, transcribe: async () => 'x' }
+  assert.equal(await handleIncoming({ ...audio, id: 'a4' }, f.deps), 'unsupported')
+  assert.equal(f.calls(), 0)
+  assert.match(f.sent[1], /escrever/)
+}
+{
+  // foto vai para o modelo; tipo estranho não
+  const s = setup(info())
+  const img: Incoming = { id: 'i1', from: '5567999990000', name: 'Ana', type: 'image', text: 'comprovante', mediaId: 'm9' }
+  s.deps.media = { download: async () => ({ data: Buffer.from('abc'), mime: 'image/jpeg' }) }
+  assert.equal(await handleIncoming(img, s.deps), 'replied')
+  assert.deepEqual(s.sawImages, [1])
+  assert.ok(s.sawText[0].includes('Legenda: comprovante'))
+  const bad = setup(info())
+  bad.deps.media = { download: async () => ({ data: Buffer.from('abc'), mime: 'application/pdf' }) }
+  assert.equal(await handleIncoming({ ...img, id: 'i2' }, bad.deps), 'unsupported')
+  assert.equal(bad.calls(), 0)
+  const sticker = setup(info())
+  assert.equal(await handleIncoming({ id: 's1', from: '5567999990000', name: 'Ana', type: 'sticker', text: '' }, sticker.deps), 'unsupported')
 }
 console.log('webhook: todos os testes passaram')

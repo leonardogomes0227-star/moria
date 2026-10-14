@@ -35,7 +35,7 @@ function memoryStore(i: StoreInfo) {
     },
     ordersOf: async (phone) => {
       asked.push(phone)
-      return [{ numero: 7, status: 'preparo', tipo: 'entrega', total: 33, criado_em: new Date().toISOString(), itens: [{ nome: 'Moriá Clássico', qtd: 1, preco: 28, adicionais: [], obs: '' }] }]
+      return [{ numero: 7, status: 'preparo', tipo: 'entrega', total: 33, criado_em: new Date().toISOString(), cliente_nome: 'Ana', endereco: 'Rua das Flores, 10', itens: [{ nome: 'Moriá Clássico', qtd: 1, preco: 28, adicionais: [], obs: '' }] }]
     },
     requestHuman: async (phone, _name, reason) => {
       humans.push({ phone, reason })
@@ -199,7 +199,19 @@ const goodOrder = {
   m = memoryStore(info())
   s = scripted([toolUse('consultar_pedido', {}), text('Seu pedido #7 está em preparo.')])
   await runAgent({ ...base, client: s.client, store: m.store, text: 'cadê meu pedido' })
-  assert.deepEqual(m.asked, [base.phone])
+  assert.deepEqual(m.asked, [base.phone, base.phone]) // memória do cliente + consultar_pedido
+  assert.ok(JSON.stringify(s.calls[0].messages.at(-1)).includes('endereço salvo: Rua das Flores, 10'))
+  // simulador não usa memória nem consulta pedidos; foto vai como bloco de imagem
+  m = memoryStore(info())
+  s = scripted([text('Recebi!')])
+  await runAgent({ ...base, client: s.client, store: m.store, dryRun: true, images: [{ mime: 'image/png', base64: 'AAAA' }], text: 'olha' })
+  assert.deepEqual(m.asked, [])
+  const content = s.calls[0].messages.at(-1)!.content as { type: string }[]
+  assert.deepEqual(content.map((b) => b.type), ['image', 'text'])
+  m = memoryStore(info())
+  s = scripted([toolUse('consultar_pedido', {}), text('Seu pedido #7 está em preparo.')])
+  await runAgent({ ...base, client: s.client, store: m.store, text: 'cadê meu pedido' })
+  assert.deepEqual(m.asked, [base.phone, base.phone])
   assert.ok(JSON.stringify(s.calls[1].messages.at(-1)).includes('numero\\":7'))
 
   m = memoryStore(info())

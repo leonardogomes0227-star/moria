@@ -78,6 +78,8 @@ export interface Order {
   numero: number
   criado_em: string
   origem: OrderOrigin
+  /** Já descontou os insumos do estoque (evita descontar duas vezes). */
+  estoque_baixado?: boolean
   status: OrderStatus
   tipo: OrderType
   cliente_nome: string
@@ -209,6 +211,8 @@ export interface FinanceSettings {
   imposto_pct: number
   /** Lucro líquido desejado sobre o preço (%), usado no preço sugerido. */
   meta_lucro_pct: number
+  /** Quando ligado, ao concluir um pedido os insumos da ficha técnica saem do estoque. */
+  baixa_estoque: boolean
 }
 
 /* ───────── Assistente de WhatsApp (IA) ───────── */

@@ -204,6 +204,12 @@ export const supabaseRepo: Repo = {
     async setStatus(id, status) {
       check((await (await client()).from('orders').update({ status }).eq('id', id)).error)
     },
+    async markStock(id, baixado) {
+      check(
+        (await (await client()).from('orders').update({ estoque_baixado: baixado }).eq('id', id))
+          .error,
+      )
+    },
   },
 
   reviews: {

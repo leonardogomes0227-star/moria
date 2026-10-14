@@ -61,6 +61,7 @@ create table if not exists public.orders (
 );
 create index if not exists orders_criado_em_idx on public.orders (criado_em desc);
 -- De onde veio o pedido (site ou assistente de WhatsApp). Para quem já tinha a tabela:
+alter table public.orders add column if not exists estoque_baixado boolean not null default false;
 alter table public.orders add column if not exists origem text not null default 'site' check (origem in ('site','whatsapp'));
 
 -- ───────── Depoimentos e galeria (editáveis no painel) ─────────
@@ -137,8 +138,10 @@ create table if not exists public.finance_settings (
   courier_dias    integer not null default 22,
   taxa_cartao_pct numeric(6,2) not null default 3,
   imposto_pct     numeric(6,2) not null default 6,
-  meta_lucro_pct  numeric(6,2) not null default 20
+  meta_lucro_pct  numeric(6,2) not null default 20,
+  baixa_estoque   boolean not null default false
 );
+alter table public.finance_settings add column if not exists baixa_estoque boolean not null default false;
 
 -- ───────── Assistente de WhatsApp (IA) ─────────
 create table if not exists public.bot_settings (

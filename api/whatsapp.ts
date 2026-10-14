@@ -3,7 +3,8 @@ import { env, readiness } from './_lib/env.js'
 import { header, json, rawBody, type Req, type Res } from './_lib/http.js'
 import { createSupabaseStore } from './_lib/supabaseStore.js'
 import { handleIncoming } from './_lib/webhook.js'
-import { extractMessages, sendText, verifySignature } from './_lib/whatsapp.js'
+import { transcribeAudio } from './_lib/transcribe.js'
+import { downloadMedia, extractMessages, sendText, verifySignature } from './_lib/whatsapp.js'
 
 export const config = { maxDuration: 60 }
 
@@ -42,7 +43,7 @@ export default async function handler(req: Req, res: Res): Promise<void> {
   const llm = sdkClient(env.anthropicKey())
   // Processa dentro da função (a Vercel encerra a execução após a resposta) e sempre devolve 200 para a Meta não reenviar.
   for (const msg of extractMessages(payload)) {
-    await handleIncoming(msg, { store, llm, send: sendText, now: () => new Date() })
+    await handleIncoming(msg, { store, llm, send: sendText, now: () => new Date(), media: { download: downloadMedia, transcribe: ready.transcricao ? transcribeAudio : undefined } })
   }
   json(res, 200, { ok: true })
 }

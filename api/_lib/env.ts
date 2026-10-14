@@ -7,6 +7,10 @@ export const env = {
   waPhoneId: () => process.env.WHATSAPP_PHONE_ID ?? '',
   waVerifyToken: () => process.env.WHATSAPP_VERIFY_TOKEN ?? '',
   waAppSecret: () => process.env.META_APP_SECRET ?? '',
+  /** Transcrição de áudio (qualquer serviço com a API compatível com a da OpenAI: OpenAI, Groq…). */
+  transcribeKey: () => process.env.TRANSCRIBE_API_KEY ?? '',
+  transcribeUrl: () => process.env.TRANSCRIBE_URL ?? 'https://api.openai.com/v1/audio/transcriptions',
+  transcribeModel: () => process.env.TRANSCRIBE_MODEL ?? 'whisper-1',
   graphVersion: () => process.env.WHATSAPP_GRAPH_VERSION ?? 'v21.0',
   storeName: () => process.env.STORE_NAME ?? 'Moriá Hamburgueria',
   storeAddress: () => process.env.STORE_ADDRESS ?? 'Rio Verde de Mato Grosso/MS',
@@ -19,6 +23,7 @@ export interface Readiness {
   supabase: boolean
   whatsapp: boolean
   signature: boolean
+  transcricao: boolean
 }
 
 export const readiness = (): Readiness => ({
@@ -26,4 +31,5 @@ export const readiness = (): Readiness => ({
   supabase: Boolean(env.supabaseUrl() && env.supabaseServiceKey()),
   whatsapp: Boolean(env.waToken() && env.waPhoneId() && env.waVerifyToken()),
   signature: Boolean(env.waAppSecret()),
+  transcricao: Boolean(env.transcribeKey()),
 })

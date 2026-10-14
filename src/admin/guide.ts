@@ -79,6 +79,7 @@ export const SECTIONS: AdminSection[] = [
       'Veja o lucro do mês: faturamento menos ingredientes, equipe, motoboy, despesas e impostos.',
       'Cadastre ingredientes (quanto pagou) e monte a ficha técnica de cada produto para saber o custo e a margem.',
       'Cadastre despesas fixas, funcionários e o pagamento do motoboy. O sistema sugere o preço certo de venda.',
+      'Em Ingredientes, a “Baixa automática de estoque” desconta os ingredientes quando você conclui um pedido.',
     ],
   },
   {
@@ -91,6 +92,7 @@ export const SECTIONS: AdminSection[] = [
       'Liga ou desliga o assistente que responde seus clientes no WhatsApp e anota pedidos sozinho.',
       'Defina o nome, o jeito de falar e regras da casa (chave Pix, promoções, avisos).',
       'Teste uma conversa antes de ligar, veja as conversas e assuma o atendimento quando quiser.',
+      'Ele entende áudio e foto (com a transcrição ligada), reconhece cliente antigo e responde em mensagens curtas.',
     ],
   },
   {

@@ -21,6 +21,7 @@ interface Status {
   supabase: boolean
   whatsapp: boolean
   signature: boolean
+  transcricao: boolean
 }
 
 async function authHeader(): Promise<Record<string, string>> {
@@ -47,10 +48,11 @@ function StatusCard({ status, error }: { status: Status | null; error: boolean }
     ['Assinatura de segurança da Meta', status.signature, 'META_APP_SECRET'],
   ]
   const all = rows.every((r) => r[1])
+  const audio: [string, boolean, string] = ['Ouvir áudios do cliente (opcional)', status.transcricao, 'TRANSCRIBE_API_KEY']
   return (
     <Card title={all ? 'Tudo conectado ✅' : 'Falta configurar'} description="Estas chaves ficam só no servidor (Vercel) e nunca aparecem no site.">
       <ul className="space-y-1.5 text-sm">
-        {rows.map(([label, ok, vars]) => (
+        {[...rows, audio].map(([label, ok, vars]) => (
           <li key={label} className="flex flex-wrap items-center gap-2">
             <span aria-hidden>{ok ? '✅' : '⬜'}</span>
             <span className={ok ? 'text-white' : 'text-white/70'}>{label}</span>
