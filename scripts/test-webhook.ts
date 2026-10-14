@@ -64,7 +64,7 @@ function setup(i: StoreInfo, llmText = 'Olá! Posso ajudar?') {
       return { content: [{ type: 'text', text: llmText }], stop_reason: 'end_turn', usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as never
     },
   }
-  const deps = { store, llm, send: async (_t: string, t: string) => { sent.push(t) }, now: () => new Date('2026-10-13T20:00:00Z') }
+  const deps = { store, llm, send: async (_t: string, t: string) => { sent.push(t) }, now: () => new Date('2026-10-13T20:00:00Z'), sleep: async () => undefined }
   return { deps, sent, saved, humans, calls: () => llmCalls, setHuman: (d: Date | null) => { human = d }, setRecent: (n: number) => { recent = n }, setMonth: (u: Usage) => { month = u } }
 }
 function m(id: string, text = 'oi', type = 'text'): Incoming {
@@ -133,5 +133,11 @@ function m(id: string, text = 'oi', type = 'text'): Incoming {
   const none = setup(info({ limite_mensal: 0 }))
   none.setMonth({ tokens_in: 0, tokens_out: 90_000_000, tokens_cache: 0 })
   assert.equal(await handleIncoming(m('1'), none.deps), 'replied')
+}
+{
+  const s = setup(info(), 'Oi, tudo bem?\n\nQual hambúrguer você curte?\n\nTemos o Clássico.\n\nE o Bacon.')
+  assert.equal(await handleIncoming(m('1'), s.deps), 'replied')
+  assert.deepEqual(s.sent, ['Oi, tudo bem?', 'Qual hambúrguer você curte?', 'Temos o Clássico.\n\nE o Bacon.'])
+  assert.equal(s.saved.length, 1)
 }
 console.log('webhook: todos os testes passaram')

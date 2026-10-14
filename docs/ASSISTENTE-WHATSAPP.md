@@ -41,3 +41,13 @@ informe seu WhatsApp (recebe avisos de handoff) e ligue a chave.
 - Falha técnica → cliente é avisado e a conversa vai para humano; você recebe aviso no WhatsApp.
 - **Limite de gasto:** em Assistente → "Limite de gasto com IA por mês" (padrão R$ 100). Ao atingir, o robô pausa, avisa o cliente e chama uma pessoa. Defina também um limite de gasto no console da Anthropic.
 - Custo: tokens da Anthropic (estimativa no painel) + tarifa de conversas da Meta (consulte a tabela atual da Meta).
+
+## Página de teste pública (`/teste`)
+Chat com visual de WhatsApp para o dono experimentar o robô sem login. As respostas chegam em 2 ou 3 mensagens curtas, com "digitando…".
+- Fica **desligada** por padrão. Para ligar, defina `DEMO_PUBLIC=1` na Vercel (opcional: `DEMO_DAILY_LIMIT`, padrão 300 mensagens por dia).
+- Não cria pedidos nem grava conversas. Limite por IP (30/hora) e por dia ficam na memória da função e **reiniciam** quando ela "dorme": o freio de verdade é o **limite de gasto no console da Anthropic**.
+- Sem as variáveis, a página abre em modo demonstração, com respostas simuladas.
+- Desligue (`DEMO_PUBLIC` vazio) depois que o dono testar.
+
+## Ainda não existe
+Áudio (precisa de um serviço de transcrição), leitura de fotos e baixa automática de estoque.

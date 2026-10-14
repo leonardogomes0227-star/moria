@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/Button'
 import { repo } from '@/lib/data'
+import { demoReply } from '@/lib/demoReply'
 import type { BotUsage } from '@/lib/data/repo'
 import { formatPrice } from '@/lib/format'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
@@ -66,17 +67,6 @@ interface ChatLine {
   content: string
 }
 
-/** Respostas de mentira, só para mostrar a ideia na demonstração. */
-function demoReply(text: string): string {
-  const t = text.toLowerCase()
-  if (/hor[aá]rio|aberto|abre|fecha/.test(t)) return 'Abrimos hoje a partir das 18h30. Quer ver o cardápio? 🍔'
-  if (/card[aá]pio|menu|op[cç][õo]es/.test(t)) return 'Temos hambúrgueres, baguetes, acompanhamentos, molhos, bebidas e combos. Qual você quer conhecer primeiro?'
-  if (/pix|pagamento|cart[aã]o/.test(t)) return 'Aceitamos Pix, cartão e dinheiro. O Pix pode ser feito na entrega, é só avisar.'
-  if (/atendente|humano|pessoa/.test(t)) return 'Claro! Vou chamar um atendente e o robô fica em silêncio. 🙏'
-  if (/quero|pedir|pedido/.test(t)) return 'Perfeito! Me diga o que vai querer, se é entrega ou retirada e a forma de pagamento. Eu anoto tudo e confirmo o valor antes de enviar para a cozinha.'
-  return 'Oi! Eu sou o assistente da hamburgueria. Posso mostrar o cardápio, tirar dúvidas e anotar seu pedido. Como posso ajudar?'
-}
-
 function Simulator({ settings }: { settings: BotSettings }) {
   const [lines, setLines] = useState<ChatLine[]>([])
   const [text, setText] = useState('')
@@ -100,7 +90,7 @@ function Simulator({ settings }: { settings: BotSettings }) {
     try {
       if (!isSupabaseConfigured) {
         await new Promise((r) => setTimeout(r, 500))
-        setLines((l) => [...l, { role: 'assistant', content: demoReply(msg) }])
+        setLines((l) => [...l, { role: 'assistant', content: demoReply(msg).join('\n\n') }])
         setInfo('Simulação de demonstração: a IA de verdade responde com base no seu cardápio e regras.')
       } else {
         const res = await fetch('/api/bot-chat', {

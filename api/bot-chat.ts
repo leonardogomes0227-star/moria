@@ -3,6 +3,7 @@ import { pickModel, runAgent, sdkClient } from './_lib/agent.js'
 import { env } from './_lib/env.js'
 import { json, rawBody, type Req, type Res } from './_lib/http.js'
 import { createSupabaseStore } from './_lib/supabaseStore.js'
+import { splitReply } from './_lib/split.js'
 import type { ChatTurn } from './_lib/types.js'
 
 export const config = { maxDuration: 60 }
@@ -42,7 +43,7 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     const info = await store.loadStore()
     if (typeof body.model === 'string') info.bot = { ...info.bot, modelo: pickModel(body.model) }
     const r = await runAgent({ client: sdkClient(env.anthropicKey()), store, phone: 'simulador', customerName: 'Teste', text, now: new Date(), history, info, dryRun: true })
-    json(res, 200, { reply: r.reply, handoff: r.handoff, usage: r.usage, toolCalls: r.toolCalls, model: pickModel(info.bot.modelo) })
+    json(res, 200, { reply: r.reply, parts: splitReply(r.reply), handoff: r.handoff, usage: r.usage, toolCalls: r.toolCalls, model: pickModel(info.bot.modelo) })
   } catch (err) {
     console.error('simulador: falha', err instanceof Error ? err.name : 'erro')
     json(res, 502, { error: 'Não foi possível falar com a IA agora. Confira a chave e tente de novo.' })

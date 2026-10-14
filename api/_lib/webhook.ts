@@ -1,4 +1,5 @@
 import { estimateBotCost } from '../../src/lib/finance/botCost.ts'
+import { splitReply, typingDelay } from './split.js'
 import { HANDOFF_FALLBACK, runAgent, type LlmClient } from './agent.js'
 import type { BotStore, ChatTurn, Usage } from './types.js'
 import type { Incoming } from './whatsapp.js'
@@ -21,6 +22,8 @@ export interface WebhookDeps {
   llm: LlmClient
   send: (to: string, text: string) => Promise<void>
   now: () => Date
+  /** Pausa entre as mensagens (padrão: espera de verdade). Os testes passam uma função vazia. */
+  sleep?: (ms: number) => Promise<void>
 }
 
 export type Outcome = 'disabled' | 'duplicate' | 'human' | 'open-hours' | 'rate-limited' | 'budget' | 'unsupported' | 'replied' | 'error'
@@ -65,7 +68,11 @@ export async function handleIncoming(msg: Incoming, deps: WebhookDeps): Promise<
     const history = await store.historyBefore(msg.from, msg.id, 20)
     const result = await runAgent({ client: llm, store, phone: msg.from, customerName: msg.name, text: msg.text.slice(0, MAX_TEXT), now: deps.now(), history, info })
     await store.saveReply(msg.from, result.reply, result.usage)
-    await send(msg.from, result.reply)
+    const wait = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)))
+    for (const [i, part] of splitReply(result.reply).entries()) {
+      if (i > 0) await wait(typingDelay(part))
+      await send(msg.from, part)
+    }
     return 'replied'
   } catch (err) {
     // Nunca deixa o cliente no vácuo: avisa e passa para uma pessoa. Não registra dados do cliente no log.
