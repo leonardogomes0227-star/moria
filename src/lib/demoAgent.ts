@@ -61,6 +61,8 @@ export interface ShopInfo {
   instagram?: string
   /** Endereço em uma linha. */
   address?: string
+  /** Endereço do site (para oferecer pedir pelo cardápio). */
+  site?: string
 }
 
 export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openLabel = '', shop: ShopInfo = {}) {
@@ -389,7 +391,7 @@ export function createDemoAgent(menu: MenuItem[], settings: StoreSettings, openL
     if (cart.length && stage === 'livre' && has(t, /\b(sim|quero|pode|bora)\b/)) return { parts: askNext() }
     if (has(t, /cade|status|meu pedido/)) return { parts: ['Você ainda não tem pedido por aqui. Quer fazer um agora? 😊'] }
     if (has(t, /\b(oi|ola|bom dia|boa tarde|boa noite|e ai|eae|opa|salve)\b/))
-      return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio, recomendar um lanche ou já anotar seu pedido. O que você tá com vontade?'] }
+      return { parts: ['Fala! Aqui é o Mori, da brasa da Moriá. 🔥🍔', 'Bora matar essa fome? Posso te mostrar o cardápio, recomendar um lanche ou já anotar seu pedido por aqui mesmo.', shop.site ? `Se preferir, também dá pra montar o pedido no cardápio do site: ${shop.site}` : 'O que você tá com vontade?'] }
     return misses >= 1
       ? { parts: ['Hmm, essa ainda eu não consegui responder. 😅', 'Quer que eu chame um atendente da casa? Ou, se preferir, me diz o que quer comer que eu anoto.'], fallback: true }
       : { parts: ['Eita, essa eu não peguei direito. 😅', 'Posso te mostrar o cardápio, recomendar um lanche ou anotar seu pedido. O que prefere?'], fallback: true }

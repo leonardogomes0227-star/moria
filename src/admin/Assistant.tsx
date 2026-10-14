@@ -103,7 +103,7 @@ function Simulator({ settings }: { settings: BotSettings }) {
       } else if (!isSupabaseConfigured) {
         await new Promise((r) => setTimeout(r, 500))
         const { settings: store } = useSettings.getState()
-        agentRef.current ??= createDemoAgent(items, store, openStatus(store.hours).label, { instagram: `@${config.instagram.handle}`, address: fullAddress() })
+        agentRef.current ??= createDemoAgent(items, store, openStatus(store.hours).label, { instagram: `@${config.instagram.handle}`, address: fullAddress(), site: window.location.origin })
         const turn = agentRef.current.reply(msg)
         if (turn.order) await repo.orders.create(turn.order).catch(() => undefined)
         setLines((l) => [...l, { role: 'assistant', content: turn.parts.join('\n\n') }])

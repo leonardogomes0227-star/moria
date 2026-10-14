@@ -13,6 +13,8 @@ export interface StoreInfo {
   open: boolean
   /** Nomes dos itens que mais deixam lucro (ordem do melhor para o pior). Vazio se não houver fichas técnicas. */
   topProfit?: string[]
+  /** Endereço do cardápio no site (o robô oferece como alternativa a pedir pela conversa). */
+  site?: string
 }
 
 export interface ChatTurn {

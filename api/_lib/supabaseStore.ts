@@ -75,6 +75,7 @@ export function createSupabaseStore(sb: SupabaseClient = serviceClient()): Serve
         settings: s,
         bot: { ...defaultBotSettings, ...botRest },
         menu: items,
+        site: env.storeSite() || undefined,
         open: isOpenAt(s.hours, new Date(), tz),
         topProfit,
       }

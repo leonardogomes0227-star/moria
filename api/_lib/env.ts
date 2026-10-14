@@ -17,6 +17,7 @@ export const env = {
   graphVersion: () => process.env.WHATSAPP_GRAPH_VERSION ?? 'v21.0',
   storeName: () => process.env.STORE_NAME ?? 'Moriá Hamburgueria',
   storeAddress: () => process.env.STORE_ADDRESS ?? 'Rio Verde de Mato Grosso/MS',
+  storeSite: () => process.env.STORE_SITE_URL ?? '',
   storeInstagram: () => process.env.STORE_INSTAGRAM ?? 'moria_hamburgueria',
   timezone: () => process.env.STORE_TZ ?? 'America/Campo_Grande',
 }

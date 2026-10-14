@@ -88,6 +88,8 @@ const goodOrder = {
   assert.ok(!/\d{2}:\d{2}/.test(a.split('CARDÁPIO')[0].replace(/\d{2}:\d{2}/g, '')) || true)
   assert.ok(a.includes('Pedido mínimo: sem mínimo'))
   assert.ok(!a.includes('ITENS QUE A CASA MAIS GOSTA DE VENDER'))
+  assert.ok(a.includes('DUAS FORMAS DE PEDIR') && !a.includes('cardápio do site ('))
+  assert.ok(buildSystemPrompt(info({ site: 'https://moria.example' })).includes('cardápio do site (https://moria.example)'))
   const withProfit = buildSystemPrompt(info({ topProfit: ['Monte Moriá', 'Bacon Supremo 2.0'] }))
   assert.ok(withProfit.includes('ITENS QUE A CASA MAIS GOSTA DE VENDER\n- Monte Moriá, Bacon Supremo 2.0.'))
   assert.ok(withProfit.includes('nunca fale de lucro ou custo com o cliente'))

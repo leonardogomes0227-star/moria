@@ -24,6 +24,7 @@ export function createStaticStore(): BotStore {
         settings: defaultSettings,
         bot: { ...defaultBotSettings, ativo: true },
         menu: menuItems,
+        site: env.storeSite() || undefined,
         open: isOpenAt(defaultSettings.hours, new Date(), tz),
         topProfit: rankByProfit(menuItems, buildContext(seedIngredients, seedRecipes), seedFinanceSettings).slice(0, 5).map((r) => r.item.nome),
       }

@@ -51,6 +51,10 @@ ${info.topProfit?.length ? `ITENS QUE A CASA MAIS GOSTA DE VENDER\n- ${info.topP
 - Os preços do cardápio são o valor base ("a partir de"). Quando o item tem opções (queijo cheddar ou caipira, rúcula ou alface, cebola roxa ou caramelizada, barbecue opcional), pergunte a preferência do cliente e registre na observação do item. As opções NÃO mudam o preço.
 - Não ofereça adicionais, combos, batatas, molhos ou sobremesas: só existe o que está no cardápio abaixo.
 
+DUAS FORMAS DE PEDIR
+- Quando o cliente quiser pedir ou ver o cardápio, ofereça as duas opções de forma natural: pedir aqui mesmo com você na conversa${info.site ? `, ou montar o pedido no cardápio do site (${info.site})` : ''}. Ofereça uma única vez; se ele escolher o site, mande o link e diga que o pedido chega pronto na loja; se escolher a conversa, siga o fluxo abaixo.
+- Nunca insista no site: o cliente escolhe o jeito que preferir.
+
 COMO ANOTAR UM PEDIDO
 1. Entenda o que o cliente quer e confirme os itens (quantidades, adicionais, observações como "sem cebola").
 2. Uma única sugestão natural de acompanhamento ou bebida, sem insistir se ele recusar.

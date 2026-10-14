@@ -54,6 +54,9 @@ export default async function handler(req: Req, res: Res): Promise<void> {
     const store = env.supabaseUrl() && env.supabaseServiceKey() ? createSupabaseStore() : createStaticStore()
     const info = await store.loadStore()
     info.bot = { ...info.bot, modelo: pickModel(info.bot.modelo) }
+    // O site que está servindo a demonstração (se STORE_SITE_URL não estiver definida).
+    const host = header(req, 'x-forwarded-host') ?? header(req, 'host')
+    info.site = info.site ?? (host ? `https://${host}` : undefined)
     const r = await runAgent({ client: sdkClient(env.anthropicKey()), store, phone: 'teste-publico', customerName: 'Visitante', text, now: new Date(), history, info, dryRun: true })
     json(res, 200, { reply: r.reply, parts: splitReply(r.reply), handoff: r.handoff, orderCreated: r.toolCalls.includes('criar_pedido') })
   } catch (err) {

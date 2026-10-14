@@ -67,7 +67,7 @@ export default function Test() {
       await wait(600)
       await useMenuStore.getState().load()
       const { settings } = useSettings.getState()
-      agentRef.current ??= createDemoAgent(useMenuStore.getState().items, settings, openStatus(settings.hours).label, { instagram: `@${config.instagram.handle}`, address: fullAddress() })
+      agentRef.current ??= createDemoAgent(useMenuStore.getState().items, settings, openStatus(settings.hours).label, { instagram: `@${config.instagram.handle}`, address: fullAddress(), site: window.location.origin })
       const turn = agentRef.current.reply(t)
       parts = turn.parts
       handoff = Boolean(turn.handoff)
